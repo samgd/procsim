@@ -8,42 +8,42 @@ class TestRegister(unittest.TestCase):
     def test_lt(self):
         test_spec = {'op_str': '<',
                      'op': lambda x, y: x < y,
-                     'exp_fn': lambda r1, r2: r1.value < r2.value,
+                     'exp_fn': lambda r1, r2: r1.read() < r2.read(),
                      'tests': {'y_above', 'y_equal', 'y_below'}}
         self.run_tests(test_spec)
 
     def test_le(self):
         test_spec = {'op_str': '<=',
                      'op': lambda x, y: x <= y,
-                     'exp_fn': lambda r1, r2: r1.value <= r2.value,
+                     'exp_fn': lambda r1, r2: r1.read() <= r2.read(),
                      'tests': {'y_above', 'y_equal', 'y_below'}}
         self.run_tests(test_spec)
 
     def test_eq(self):
         test_spec = {'op_str': '==',
                      'op': lambda x, y: x == y,
-                     'exp_fn': lambda r1, r2: r1.value == r2.value,
+                     'exp_fn': lambda r1, r2: r1.read() == r2.read(),
                      'tests': {'y_above', 'y_equal', 'y_below'}}
         self.run_tests(test_spec)
 
     def test_ne(self):
         test_spec = {'op_str': '!=',
                      'op': lambda x, y: x != y,
-                     'exp_fn': lambda r1, r2: r1.value != r2.value,
+                     'exp_fn': lambda r1, r2: r1.read() != r2.read(),
                      'tests': {'y_above', 'y_equal', 'y_below'}}
         self.run_tests(test_spec)
 
     def test_gt(self):
         test_spec = {'op_str': '>',
                      'op': lambda x, y: x > y,
-                     'exp_fn': lambda r1, r2: r1.value > r2.value,
+                     'exp_fn': lambda r1, r2: r1.read() > r2.read(),
                      'tests': {'y_above', 'y_equal', 'y_below'}}
         self.run_tests(test_spec)
 
     def test_ge(self):
         test_spec = {'op_str': '>=',
                      'op': lambda x, y: x >= y,
-                     'exp_fn': lambda r1, r2: r1.value >= r2.value,
+                     'exp_fn': lambda r1, r2: r1.read() >= r2.read(),
                      'tests': {'y_above', 'y_equal', 'y_below'}}
         self.run_tests(test_spec)
 
@@ -51,18 +51,34 @@ class TestRegister(unittest.TestCase):
     def test_add(self):
         test_spec = {'op_str': '+',
                      'op': lambda x, y: x + y,
-                     'exp_fn': lambda r1, r2: Register(r1.value + r2.value),
+                     'exp_fn': lambda r1, r2: Register(r1.read() + r2.read()),
                      'tests': {'y_above', 'y_equal', 'y_below'}}
         self.run_tests(test_spec)
 
     def test_sub(self):
         test_spec = {'op_str': '-',
                      'op': lambda x, y: x - y,
-                     'exp_fn': lambda r1, r2: Register(r1.value - r2.value),
+                     'exp_fn': lambda r1, r2: Register(r1.read() - r2.read()),
                      'tests': {'y_above', 'y_equal', 'y_below'}}
         self.run_tests(test_spec)
 
     # Misc tests.
+    def test_write(self):
+        for _ in range(100):
+            reg = gen_reg()
+            val = random.randint(-100000, 100000)
+            reg.write(val)
+            self.assertEqual(reg, Register(val),
+                             '%s should have value %d after write' % (reg, val))
+
+    def test_read(self):
+        for i in range(100):
+            val = random.randint(-10000, 10000)
+            reg = Register(val)
+            read = reg.read()
+            self.assertEqual(read, val,
+                             'reg.read() returned %s, should be %s' % (read, val))
+
     def test_repr(self):
         reg = gen_reg()
         self.assertEqual(reg, eval(repr(reg)))
@@ -92,9 +108,9 @@ class TestRegister(unittest.TestCase):
                 self.assertEqual(test_spec['op'](reg_a, reg_b),
                                  expected,
                                  msg(reg_b))
-                self.assertEqual(test_spec['op'](reg_a, reg_b.value),
+                self.assertEqual(test_spec['op'](reg_a, reg_b.read()),
                                  expected,
-                                 msg(reg_b.value))
+                                 msg(reg_b.read()))
 
 def gen_reg():
     """Return a Register with a random value."""
@@ -102,12 +118,12 @@ def gen_reg():
 
 def gen_reg_above(reg):
     """Return a Register with value greater than the Register argument."""
-    return Register(random.randint(reg.value + 1, reg.value + 100000))
+    return Register(random.randint(reg.read() + 1, reg.read() + 100000))
 
 def gen_reg_equal(reg):
     """Return a Register with value equal to the Register argument."""
-    return Register(reg.value)
+    return Register(reg.read())
 
 def gen_reg_below(reg):
     """Return a Register with value less than the Register argument."""
-    return Register(random.randint(reg.value - 100000, reg.value - 1))
+    return Register(random.randint(reg.read() - 100000, reg.read() - 1))

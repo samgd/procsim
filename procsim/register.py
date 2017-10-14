@@ -35,5 +35,16 @@ class Register:
             return Register(self.value - other.value)
         return Register(self.value - other)
 
+    def write(self, other):
+        """Set the Register's value to the immediate or Register value."""
+        if isinstance(other, Register):
+            self.value = other.value
+        else:
+            self.value = other
+
+    def read(self):
+        """Return the Register's value."""
+        return self.value
+
     def __repr__(self):
         return 'Register(%s)' % self.value
