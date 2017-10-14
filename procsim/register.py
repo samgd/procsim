@@ -8,7 +8,7 @@ class Register:
         value: Initial Register value.
     """
 
-    def __init__(self, value=None):
+    def __init__(self, value=0):
         self.value = value
 
     def __lt__(self, other):
