@@ -62,6 +62,11 @@ class TestRegister(unittest.TestCase):
                      'tests': {'y_above', 'y_equal', 'y_below'}}
         self.run_tests(test_spec)
 
+    # Misc tests.
+    def test_repr(self):
+        reg = gen_reg()
+        self.assertEqual(reg, eval(repr(reg)))
+
     # Test utilities.
     def run_tests(self, test_spec):
         """Run tests based on a test specification."""
