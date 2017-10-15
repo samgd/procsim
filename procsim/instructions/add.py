@@ -11,6 +11,7 @@ class Add(IntegerLogical):
     """
 
     def __init__(self, rd, r1, r2):
+        super().__init__()
         self.rd = rd
         self.r1 = r1
         self.r2 = r2

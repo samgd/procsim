@@ -11,6 +11,7 @@ class AddI(IntegerLogical):
     """
 
     def __init__(self, rd, r1, imm):
+        super().__init__()
         self.rd = rd
         self.r1 = r1
         self.imm = imm
