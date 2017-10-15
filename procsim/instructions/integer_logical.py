@@ -7,6 +7,7 @@ class IntegerLogical(Instruction):
 
     def __init__(self):
         super().__init__()
+        self.DELAY = 2
 
     @abc.abstractmethod
     def execute(self, register_file):

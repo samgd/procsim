@@ -21,6 +21,7 @@ class TestIntegerUnit(unittest.TestCase):
         unit = IntegerUnit(self.reg_file, self.wu_stub)
         unit.feed(add)
         unit.tick()
+        unit.tick()
         self.assertEqual(self.wu_stub.result, Result('r1', 8))
 
     def test_integer_unit_busy(self):

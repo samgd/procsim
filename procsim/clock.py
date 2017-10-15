@@ -1,23 +1,32 @@
-from procsim.tickable import Tickable
+from procsim.clocked import Clocked
 
 class Clock:
-    """Simple processor clock to coordinate component execution."""
+    """Simple processor clock to coordinate Clocked component execution."""
 
     def __init__(self):
-        self.tickables = []
+        self.components = []
 
-    def register(self, tickable):
-        """Register a Tickable with the Clock."""
-        assert_msg = 'Non-Tickable object attempted to register with Clock'
-        assert isinstance(tickable, Tickable), assert_msg
-        self.tickables.append(tickable)
+    def register(self, component):
+        """Register a Clocked component with the Clock."""
+        assert_msg = 'Non-Clocked component attempted to register with Clock'
+        assert isinstance(component, Clocked), assert_msg
+        self.components.append(component)
+
+    def operate(self):
+        """Call operate on every registered component."""
+        for comp in self.components:
+            comp.operate()
+
+    def trigger(self):
+        """Call trigger on every registered component."""
+        for comp in self.components:
+            comp.trigger()
 
     def tick(self):
-        """Call tick on every Tickable.
+        """Call operate and trigger on every registered component.
 
-        Call order is arbitrary - the components must not have tick
-        dependencies. This can be achieved by implementing the Tickable
-        interface.
+        Operate is called on every registered component first and then trigger
+        is called.
         """
-        for tickable in self.tickables:
-            tickable.tick()
+        self.operate()
+        self.trigger()
