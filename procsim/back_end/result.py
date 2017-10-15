@@ -17,3 +17,6 @@ class Result:
     def __eq__(self, other):
         """Results are equal if they have equal dest and value attributes."""
         return self.dest == other.dest and self.value == other.value
+
+    def __repr__(self):
+        return 'Result(%r, %r)' % (self.dest, self.value)
