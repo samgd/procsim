@@ -46,7 +46,7 @@ class RegisterFile(Tickable):
                                                                 self.current)
     def tick(self):
         self.current = self.future
-        self.future = self._initialize_future
+        self.future = self._initialize_future()
 
     def _initialize_future(self):
         """Return a deepcopy of the current state."""
