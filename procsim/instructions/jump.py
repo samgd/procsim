@@ -1,4 +1,6 @@
-class Jump:
+from procsim.instructions.instruction import Instruction
+
+class Jump(Instruction):
     """Jump instruction.
 
     Args:

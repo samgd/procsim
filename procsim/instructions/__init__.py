@@ -1,3 +1,5 @@
+from procsim.instructions.instruction import Instruction
+
 from procsim.instructions.add import Add
 from procsim.instructions.addi import AddI
 from procsim.instructions.sub import Sub

@@ -1,4 +1,6 @@
-class Blth:
+from procsim.instructions.instruction import Instruction
+
+class Blth(Instruction):
     """Branch less than instruction.
 
     Args:

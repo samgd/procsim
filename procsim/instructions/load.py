@@ -1,4 +1,6 @@
-class Load:
+from procsim.instructions.instruction import Instruction
+
+class Load(Instruction):
     """Load instruction.
 
     Args:

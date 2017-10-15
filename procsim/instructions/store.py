@@ -1,4 +1,6 @@
-class Store:
+from procsim.instructions.instruction import Instruction
+
+class Store(Instruction):
     """Store instruction.
 
     Args:
