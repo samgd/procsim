@@ -13,8 +13,8 @@ class WriteUnit(Tickable, Feedable):
     def __init__(self, register_file, write_delay=1):
         self.register_file = register_file
         self.result = None
-        self.WRITE_DELAY = write_delay
-        self.write_timer = self.WRITE_DELAY
+        self.DELAY = write_delay
+        self.write_timer = self.DELAY
 
     def feed(self, result):
         """Feed the WriteUnit a Result to write.
@@ -24,7 +24,7 @@ class WriteUnit(Tickable, Feedable):
         """
         assert self.result is None, 'WriteUnit fed when busy'
         self.result = result
-        self.write_timer = self.WRITE_DELAY
+        self.write_timer = self.DELAY
 
     def busy(self):
         """Return True if the WriteUnit is already waiting to write a Result."""
