@@ -1,12 +1,7 @@
-from copy import deepcopy
-
 from procsim.register import Register
-from procsim.tickable import Tickable
 
-class RegisterFile(Tickable):
+class RegisterFile:
     """A RegisterFile is a set of Registers.
-
-    Note: Register writes only commit after a tick.
 
     Args:
         n_registers: Number of registers in the RegisterFile.
@@ -17,37 +12,28 @@ class RegisterFile(Tickable):
     """
     def __init__(self, n_registers, prefix='r', init_values=None):
         self.prefix = prefix
-        self.current = {prefix + str(i): Register() for i in range(n_registers)}
+        self.registers = {prefix + str(i): Register() for i in range(n_registers)}
         if init_values is not None:
             for name, value in init_values.items():
-                self.current[name].write(value)
-        self.future = self._initialize_future()
+                self[name] = value
 
     def __eq__(self, other):
-        """Return True if all current Register values are equal."""
-        return self.current == other.current
+        """Return True if all Register values are equal."""
+        return self.registers == other.registers
 
     def __getitem__(self, name):
         """Get a Register."""
-        # Defensive copy to prevent modification avoiding tickable.
-        return deepcopy(self.current[name])
+        return self.registers[name]
 
     def __setitem__(self, name, value):
-        """Set a Register's value on next tick."""
-        self.future[name].write(value)
+        """Set a Register's value."""
+        self.registers[name].write(value)
 
     def __len__(self):
         """Return the number of Registers in the RegisterFile."""
-        return len(self.current)
+        return len(self.registers)
 
     def __repr__(self):
-        return 'RegisterFile(%d, prefix=%r, init_values=%r)' % (len(self.current),
+        return 'RegisterFile(%d, prefix=%r, init_values=%r)' % (len(self.registers),
                                                                 self.prefix,
-                                                                self.current)
-    def tick(self):
-        self.current = self.future
-        self.future = self._initialize_future()
-
-    def _initialize_future(self):
-        """Return a deepcopy of the current state."""
-        return deepcopy(self.current)
+                                                                self.registers)

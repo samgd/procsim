@@ -10,9 +10,6 @@ class TestRegisterFile(unittest.TestCase):
         reg_file2 = RegisterFile(3, prefix='R', init_values={'R1': 10, 'R2': -1})
         self.assertTrue(reg_file1 == reg_file2)
         reg_file2['R0'] += 1
-        self.assertTrue(reg_file1 == reg_file2,
-                        'RegisterFiles should be equal after update but before tick')
-        reg_file2.tick()
         self.assertTrue(reg_file1 != reg_file2)
 
     def test_get(self):
@@ -28,20 +25,9 @@ class TestRegisterFile(unittest.TestCase):
         name = 'Y2'
         exp = -100
         reg_file[name] = exp
-        self.assertEqual(reg_file[name], 0,
-                        'value should not be set before tick')
-        reg_file.tick()
         got = reg_file[name]
         self.assertEqual(got, exp,
                          '%s returned %s, should be set to %s' % (name, got, exp))
-
-    def test_defensive_copy(self):
-        """Ensure Registers cannot be written to outside of tick."""
-        reg_file = RegisterFile(1, prefix='R', init_values={'R0': 10})
-        reg = reg_file['R0']
-        reg.write(99)
-        self.assertEqual(reg_file['R0'], 10,
-                         'Register update possible without tick')
 
     def test_len(self):
         n_registers = 10

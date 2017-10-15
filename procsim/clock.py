@@ -1,3 +1,5 @@
+from procsim.tickable import Tickable
+
 class Clock:
     """Simple processor clock to coordinate component execution."""
 
@@ -6,6 +8,8 @@ class Clock:
 
     def register(self, tickable):
         """Register a Tickable with the Clock."""
+        assert_msg = 'Non-Tickable object attempted to register with Clock'
+        assert isinstance(tickable, Tickable), assert_msg
         self.tickables.append(tickable)
 
     def tick(self):
