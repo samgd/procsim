@@ -1,6 +1,6 @@
-from procsim.instructions.instruction import Instruction
+from procsim.instructions.memory_access import MemoryAccess
 
-class Store(Instruction):
+class Store(MemoryAccess):
     """Store instruction.
 
     Args:
@@ -9,8 +9,12 @@ class Store(Instruction):
     """
 
     def __init__(self, rs, r1):
+        super.__init__()
         self.rs = rs
         self.r1 = r1
 
     def __repr__(self):
         return 'Store(%r, %r)' % (self.rs, self.r1)
+
+    def execute(self, register_file, memory):
+        pass
