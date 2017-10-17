@@ -9,7 +9,7 @@ class Load(MemoryAccess):
     """
 
     def __init__(self, rd, r1):
-        super.__init__()
+        super().__init__()
         self.rd = rd
         self.r1 = r1
 

@@ -9,7 +9,7 @@ class Store(MemoryAccess):
     """
 
     def __init__(self, rs, r1):
-        super.__init__()
+        super().__init__()
         self.rs = rs
         self.r1 = r1
 
