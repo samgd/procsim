@@ -1,5 +1,8 @@
 from procsim.instructions.instruction import Instruction
 
+from procsim.instructions.integer_logical import IntegerLogical
+from procsim.instructions.memory_access import MemoryAccess
+
 from procsim.instructions.add import Add
 from procsim.instructions.addi import AddI
 from procsim.instructions.sub import Sub

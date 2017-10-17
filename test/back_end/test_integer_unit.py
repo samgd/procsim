@@ -5,6 +5,7 @@ from procsim.back_end.result import Result
 from procsim.feedable import Feedable
 from procsim.instructions import Add
 from procsim.instructions import AddI
+from procsim.instructions import IntegerLogical
 from procsim.register_file import RegisterFile
 
 class TestIntegerUnit(unittest.TestCase):
@@ -14,7 +15,7 @@ class TestIntegerUnit(unittest.TestCase):
         self.reg_file = RegisterFile(10, init_values=init_values)
         self.wu_stub = WriteUnitStub()
 
-    def test_integer_unit_correct_result(self):
+    def test_correct_result(self):
         """Test correct Result computed by IntegerUnit and fed to WriteUnit."""
         add = Add('r1', 'r3', 'r5')
         add.DELAY = 1
@@ -24,7 +25,7 @@ class TestIntegerUnit(unittest.TestCase):
         unit.tick()
         self.assertEqual(self.wu_stub.result, Result('r1', 8))
 
-    def test_integer_unit_busy(self):
+    def test_busy(self):
         """Test IntegerUnit busy method updates correctly after ticks."""
         add = Add('r0', 'r1', 'r6')
         add.DELAY = 5
@@ -44,6 +45,10 @@ class TestIntegerUnit(unittest.TestCase):
             unit.tick()
             self.assertFalse(unit.busy(),
                              'IntegerUnit busy after DELAY ticks')
+
+    def test_capability(self):
+        unit = IntegerUnit(self.reg_file, self.wu_stub)
+        self.assertEqual(unit.capability(), IntegerLogical)
 
 class WriteUnitStub(Feedable):
     """Stub to receive IntegerUnit Results from.

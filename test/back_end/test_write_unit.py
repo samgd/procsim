@@ -1,8 +1,9 @@
 import unittest
 
-from procsim.register_file import RegisterFile
 from procsim.back_end.result import Result
 from procsim.back_end.write_unit import WriteUnit
+from procsim.instructions import Instruction
+from procsim.register_file import RegisterFile
 
 class TestWriteUnit(unittest.TestCase):
 
@@ -50,3 +51,7 @@ class TestWriteUnit(unittest.TestCase):
             unit.tick()
             self.assertFalse(unit.busy(),
                              'WriteUnit busy after write_delay ticks %d')
+
+    def test_capability(self):
+        unit = WriteUnit(self.reg_file)
+        self.assertEqual(unit.capability(), Instruction)

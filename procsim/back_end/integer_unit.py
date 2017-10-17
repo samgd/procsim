@@ -1,8 +1,8 @@
-from procsim.clocked import Clocked
-from procsim.feedable import Feedable
+from procsim.back_end.execution_unit import ExecutionUnit
+from procsim.instructions import IntegerLogical
 
-class IntegerUnit(Clocked, Feedable):
-    """A single integer execution unit capable of integer and logical ops.
+class IntegerUnit(ExecutionUnit):
+    """A single integer ExecutionUnit capable of integer and logical ops.
 
     The execution delay is taken from the Instruction's DELAY attribute.
 
@@ -52,3 +52,6 @@ class IntegerUnit(Clocked, Feedable):
         else:
             self.future_inst = self.current_inst
             self.future_timer = max(0, self.current_timer - 1)
+
+    def capability(self):
+        return IntegerLogical

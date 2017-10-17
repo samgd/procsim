@@ -1,7 +1,7 @@
-from procsim.clocked import Clocked
-from procsim.feedable import Feedable
+from procsim.back_end.execution_unit import ExecutionUnit
+from procsim.instructions import Instruction
 
-class WriteUnit(Clocked, Feedable):
+class WriteUnit(ExecutionUnit):
     """A WriteUnit writes Results to a RegisterFile after a number of ticks.
 
     Args:
@@ -50,3 +50,6 @@ class WriteUnit(Clocked, Feedable):
         else:
             self.future_result = self.current_result
             self.future_timer = max(0, self.current_timer - 1)
+
+    def capability(self):
+        return Instruction
