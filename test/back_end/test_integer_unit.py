@@ -7,6 +7,7 @@ from procsim.instructions import Add
 from procsim.instructions import AddI
 from procsim.instructions import IntegerLogical
 from procsim.register_file import RegisterFile
+from test.back_end.write_unit_stub import WriteUnitStub
 
 class TestIntegerUnit(unittest.TestCase):
 
@@ -49,18 +50,3 @@ class TestIntegerUnit(unittest.TestCase):
     def test_capability(self):
         unit = IntegerUnit(self.reg_file, self.wu_stub)
         self.assertEqual(unit.capability(), IntegerLogical)
-
-class WriteUnitStub(Feedable):
-    """Stub to receive IntegerUnit Results from.
-
-    Attributes:
-        result: Result set on feed. (default None)
-    """
-    def __init__(self):
-        self.result = None
-
-    def feed(self, result):
-        self.result = result
-
-    def busy(self):
-        return False

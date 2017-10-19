@@ -1,3 +1,5 @@
+from procsim.register import Register
+
 class Memory:
     """Simple random-access memory model.
 
@@ -18,16 +20,19 @@ class Memory:
 
     def __getitem__(self, address):
         """Get the value at the given Memory address."""
-        self._validate_address(address)
+        address = self._validate_address(address)
         return self.memory[address]
 
     def __setitem__(self, address, value):
         """Set the value at the given Memory address."""
-        self._validate_address(address)
+        address = self._validate_address(address)
         self.memory[address] = value
 
     def _validate_address(self, address):
-        if not isinstance(address, int):
-            raise TypeError('memory address must be an integer, not %s', type(address))
+        if not isinstance(address, (int, Register)):
+            raise TypeError('memory address must be an integer or Register, not %r' % type(address))
+        if isinstance(address, Register):
+            address = address.read()
         if not 0 <= address < len(self.memory):
             raise IndexError('memory address out of range')
+        return address

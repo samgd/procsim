@@ -2,6 +2,7 @@ import random
 import unittest
 
 from procsim.memory import Memory
+from procsim.register import Register
 
 class TestMemory(unittest.TestCase):
 
@@ -42,5 +43,8 @@ class TestMemory(unittest.TestCase):
             for i in range(100):
                 new_value = random.randint(-10000, 10000)
                 address = random.randint(0, size - 1)
+                # Test using addresses stored in Registers 50% of the time.
+                if i % 2 == 0:
+                    address = Register(address)
                 memory[address] = new_value
                 self.assertEqual(memory[address], new_value)

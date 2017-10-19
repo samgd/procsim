@@ -22,8 +22,8 @@ class RegisterFile:
         return self.registers == other.registers
 
     def __getitem__(self, name):
-        """Get a Register."""
-        return self.registers[name]
+        """Get a Register's value."""
+        return self.registers[name].read()
 
     def __setitem__(self, name, value):
         """Set a Register's value."""

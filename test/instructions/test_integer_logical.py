@@ -60,7 +60,6 @@ class TestIntegerLogical(unittest.TestCase):
             self.assertEqual(result.value,
                              test_spec['exp_fn'](r1, v2))
 
-
     def random_reg(self):
         """Return a random but valid Register name."""
         return 'r%d' % random.randint(0, self.register_len - 1)

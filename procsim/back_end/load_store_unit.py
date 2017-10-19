@@ -15,18 +15,32 @@ class LoadStoreUnit(ExecutionUnit):
 
     def __init__(self, register_file, write_unit, memory):
         super().__init__()
-        self.register_file = register_file
+        self.reg_file = register_file
         self.write_unit = write_unit
         self.memory = memory
+        self.current_inst = None
+        self.current_timer =0
+        self.future_inst = None
+        self.future_timer = 0
 
     def feed(self, instruction):
-        ...
+        """Feed the LoadStoreUnit an Instruction to execute)
+
+        Args:
+            instruction: A MemoryAccess Instruction to execute.
+        """
+        assert self.future_inst is None, 'LoadStoreUnit fed when busy'
+        self.future_inst = instruction
+        self.future_timer = max(0, instruction.DELAY - 1)
 
     def busy(self):
-        ...
+        """Return True if the LoadStoreUnit's future state is non-empty."""
+        return self.future_inst is not None
 
     def operate(self):
-        ...
+        """Feed Result to the WriteUnit if possible."""
+        if self.current_inst and self.current_timer == 0 and not self.write_unit.busy():
+            self.write_unit.feed(self.current_inst.execute(self.reg_file, self.memory))
 
     def trigger(self):
         ...

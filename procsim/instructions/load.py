@@ -1,3 +1,4 @@
+from procsim.back_end.result import Result
 from procsim.instructions.memory_access import MemoryAccess
 
 class Load(MemoryAccess):
@@ -13,8 +14,8 @@ class Load(MemoryAccess):
         self.rd = rd
         self.r1 = r1
 
+    def execute(self, register_file, memory):
+        return Result(self.rd, memory[register_file[self.r1]])
+
     def __repr__(self):
         return 'Load(%r, %r)' % (self.rd, self.r1)
-
-    def execute(self, register_file, memory):
-        pass
