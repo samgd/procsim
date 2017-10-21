@@ -1,5 +1,6 @@
 from procsim.instructions.instruction import Instruction
 
+from procsim.instructions.branch_jump import BranchJump
 from procsim.instructions.integer_logical import IntegerLogical
 from procsim.instructions.memory_access import MemoryAccess
 

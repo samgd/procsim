@@ -1,9 +1,8 @@
 import abc
 
-from procsim.clocked import Clocked
-from procsim.feedable import Feedable
+from procsim.pipeline_stage import PipelineStage
 
-class ExecutionUnit(Clocked, Feedable):
+class ExecutionUnit(PipelineStage):
     """Abstract class representing a single ExecutionUnit."""
 
     def __init__(self):

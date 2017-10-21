@@ -3,11 +3,9 @@ from copy import copy
 from itertools import filterfalse
 import inspect
 
-from procsim.back_end.execution_unit import ExecutionUnit
-from procsim.clocked import Clocked
-from procsim.feedable import Feedable
+from procsim.pipeline_stage import PipelineStage
 
-class ReservationStation(Clocked, Feedable):
+class ReservationStation(PipelineStage):
     """A ReservationStation that buffers Instructions until all of their
     execution requirements are met.
 

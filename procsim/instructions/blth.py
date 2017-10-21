@@ -1,6 +1,6 @@
-from procsim.instructions.instruction import Instruction
+from procsim.instructions import BranchJump
 
-class Blth(Instruction):
+class Blth(BranchJump):
     """Branch less than instruction.
 
     Args:
@@ -13,6 +13,9 @@ class Blth(Instruction):
         self.r1 = r1
         self.r2 = r2
         self.imm = imm
+
+    def execute(self, register_file):
+        raise NotImplementedError('TODO')
 
     def __repr__(self):
         return 'Blth(%r, %r, %r)' % (self.r1, self.r2, self.imm)
