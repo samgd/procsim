@@ -1,7 +1,7 @@
 from procsim.clocked import Clocked
 
 class Fetch(Clocked):
-    """Fetch address at program counter and feed to Decode stage.
+    """Fetch instruction at address in program counter and feed to Decode stage.
 
     Args:
         register_file: RegisterFile to read program counter value from.
