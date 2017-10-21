@@ -44,3 +44,11 @@ class TestInstructions(unittest.TestCase):
         args = ('x0', 'x10', 99)
         blth = ins.Blth(*args)
         self.assertEqual(repr(blth), "Blth(%r, %r, %r)" % args)
+
+    def test_equality(self):
+        ins1 = ins.Add('r1', 'r2', 'r3')
+        ins2 = ins.Add('r1', 'r2', 'r3')
+        ins3 = ins.Jump(100)
+        self.assertTrue(ins1 == ins2)
+        self.assertFalse(ins1 is ins2)
+        self.assertFalse(ins2 == ins3)
