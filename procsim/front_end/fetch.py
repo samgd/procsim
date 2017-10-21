@@ -10,6 +10,7 @@ class Fetch(Clocked):
     """
 
     def __init__(self, register_file, program_file, decode):
+        super().__init__()
         with open(program_file, 'r') as prog:
             self.program = prog.read().splitlines()
         self.reg_file = register_file
