@@ -19,7 +19,7 @@ class LoadStoreUnit(ExecutionUnit):
         self.write_unit = write_unit
         self.memory = memory
         self.current_inst = None
-        self.current_timer =0
+        self.current_timer = 0
         self.future_inst = None
         self.future_timer = 0
 
@@ -43,7 +43,17 @@ class LoadStoreUnit(ExecutionUnit):
             self.write_unit.feed(self.current_inst.execute(self.reg_file, self.memory))
 
     def trigger(self):
-        ...
+        """Advance the state of the LoadStoreUnit and init a new future state."""
+        # Update current state.
+        self.current_inst = self.future_inst
+        self.current_timer = self.future_timer
+        # Initialize future state.
+        if self.current_inst is None or self.current_timer == 0:
+            self.future_inst = None
+            self.future_timer = 0
+        else:
+            self.future_inst = self.current_inst
+            self.future_timer = max(0, self.current_timer - 1)
 
     def capability(self):
         return MemoryAccess

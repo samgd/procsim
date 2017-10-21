@@ -1,57 +1,54 @@
 import unittest
 
+from procsim.back_end.load_store_unit import LoadStoreUnit
 from procsim.back_end.result import Result
-from procsim.back_end.write_unit import WriteUnit
-from procsim.instructions import Instruction
+from procsim.instructions import Load
+from procsim.instructions import MemoryAccess
+from procsim.memory import Memory
 from procsim.register_file import RegisterFile
+from test.back_end.write_unit_stub import WriteUnitStub
 
-class TestWriteUnit(unittest.TestCase):
+class TestLoadStoreUnit(unittest.TestCase):
 
     def setUp(self):
         init_values = {'r%d' % i: i for i in range(10)}
         self.reg_file = RegisterFile(10, init_values=init_values)
 
-    def test_feed_write_delay(self):
-        """Test write occurs after given write_delay."""
-        result = Result('r0', 10)
-        for write_delay in [1, 5, 10]:
-            # Initialize WriteUnit.
-            unit = WriteUnit(self.reg_file, write_delay)
+        self.wu_stub = WriteUnitStub()
 
-            unit.feed(result)
-            unit.tick()
-            self.assertNotEqual(self.reg_file[result.dest], result.value,
-                                'RegisterFile updated before write_delay')
-            # Perform write_delay - 1 ticks.
-            for _ in range(write_delay - 1):
-                unit.tick()
-                self.assertNotEqual(self.reg_file[result.dest], result.value,
-                                    'RegisterFile updated before write_delay')
-            # Call tick to trigger write.
-            unit.tick()
-            self.assertEqual(self.reg_file[result.dest], result.value,
-                             'RegisterFile not updated after write_delay')
-            # Reset RegisterFile.
-            self.reg_file[result.dest] = 0
+        self.memory = Memory(200)
+        for i in range(len(self.memory)):
+            self.memory[i] = i
 
-    def test_feed_busy(self):
-        """Test busy returns True after feed and False after write_delay."""
-        result = Result('r0', 10)
-        for write_delay in [1, 5, 10]:
-            unit = WriteUnit(self.reg_file, write_delay)
-            self.assertFalse(unit.busy(),
-                             'WriteUnit busy after initialization')
-            unit.feed(result)
+    def test_correct_result_load(self):
+        """Test correct load Result computed by LoadStoreUnit and fed to WriteUnit."""
+        load = Load('r0', 'r8')
+        load.DELAY = 1
+        unit = LoadStoreUnit(self.reg_file, self.wu_stub, self.memory)
+        unit.feed(load)
+        unit.tick()
+        unit.tick()
+        self.assertEqual(self.wu_stub.result, Result('r0', 8))
+
+    def test_busy(self):
+        """Test LoadStoreUnit busy method updates correctly after ticks."""
+        load = Load('r0', 'r1')
+        load.DELAY = 5
+
+        unit = LoadStoreUnit(self.reg_file, self.wu_stub, self.memory)
+        self.assertFalse(unit.busy(),
+                         'LoadStoreUnit busy after initialization')
+        unit.feed(load)
+        self.assertTrue(unit.busy(),
+                        'LoadStoreUnit not busy after being fed')
+        for _ in range(load.DELAY - 1):
+            unit.tick()
             self.assertTrue(unit.busy(),
-                            'WriteUnit not busy after being fed')
-            for _ in range(write_delay - 1):
-                unit.tick()
-                self.assertTrue(unit.busy(),
-                                'WriteUnit not busy before write_delay ticks')
-            unit.tick()
-            self.assertFalse(unit.busy(),
-                             'WriteUnit busy after write_delay ticks %d')
+                            'LoadStoreUnit not busy before DELAY ticks')
+        unit.tick()
+        self.assertFalse(unit.busy(),
+                         'LoadStoreUnit busy after DELAY ticks')
 
     def test_capability(self):
-        unit = WriteUnit(self.reg_file)
-        self.assertEqual(unit.capability(), Instruction)
+        unit = LoadStoreUnit(self.reg_file, self.wu_stub, self.memory)
+        self.assertEqual(unit.capability(), MemoryAccess)

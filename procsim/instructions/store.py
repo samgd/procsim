@@ -13,8 +13,8 @@ class Store(MemoryAccess):
         self.rs = rs
         self.r1 = r1
 
+    def execute(self, register_file, memory):
+        raise NotImplementedError('TODO')
+
     def __repr__(self):
         return 'Store(%r, %r)' % (self.rs, self.r1)
-
-    def execute(self, register_file, memory):
-        pass
