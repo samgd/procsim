@@ -31,3 +31,6 @@ class Add(IntegerLogical):
 
     def __repr__(self):
         return 'Add(%r, %r, %r)' % (self.rd, self.r1, self.r2)
+
+    def __str__(self):
+        return 'add %s %s %s' % (self.rd, self.r1, self.r2)

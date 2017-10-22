@@ -18,3 +18,6 @@ class Store(MemoryAccess):
 
     def __repr__(self):
         return 'Store(%r, %r)' % (self.rs, self.r1)
+
+    def __str__(self):
+        return 'str %s %s' % (self.rs, self.r1)

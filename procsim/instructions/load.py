@@ -19,3 +19,6 @@ class Load(MemoryAccess):
 
     def __repr__(self):
         return 'Load(%r, %r)' % (self.rd, self.r1)
+
+    def __str__(self):
+        return 'ldr %s %s' % (self.rd, self.r1)

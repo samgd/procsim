@@ -31,3 +31,6 @@ class AddI(IntegerLogical):
 
     def __repr__(self):
         return 'AddI(%r, %r, %r)' % (self.rd, self.r1, self.imm)
+
+    def __str__(self):
+        return 'addi %s %s %s' % (self.rd, self.r1, self.imm)

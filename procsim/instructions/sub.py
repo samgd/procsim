@@ -31,3 +31,6 @@ class Sub(Instruction):
 
     def __repr__(self):
         return 'Sub(%r, %r, %r)' % (self.rd, self.r1, self.r2)
+
+    def __str__(self):
+        return 'sub %s %s %s' % (self.rd, self.r1, self.r2)

@@ -31,3 +31,6 @@ class SubI(Instruction):
 
     def __repr__(self):
         return 'SubI(%r, %r, %r)' % (self.rd, self.r1, self.imm)
+
+    def __str__(self):
+        return 'subi %s %s %s' % (self.rd, self.r1, self.imm)

@@ -19,3 +19,6 @@ class Blth(BranchJump):
 
     def __repr__(self):
         return 'Blth(%r, %r, %r)' % (self.r1, self.r2, self.imm)
+
+    def __str__(self):
+        return 'blth %s %s %s' % (self.r1, self.r2, self.imm)

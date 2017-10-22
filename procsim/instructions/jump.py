@@ -16,3 +16,6 @@ class Jump(BranchJump):
 
     def __repr__(self):
         return 'Jump(%r)' % self.imm
+
+    def __str__(self):
+        return 'j %s' % self.imm
