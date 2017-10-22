@@ -1,11 +1,10 @@
-import locale
 import os
-import tempfile
 import unittest
 
 from procsim.front_end.fetch import Fetch
 from procsim.register_file import RegisterFile
 from test.feed_log import FeedLog
+from test.front_end.utils import make_program_file
 import procsim.instructions as ins
 
 TEST_PROGRAM = [ins.Add('r1', 'r2', 'r3'),
@@ -16,15 +15,9 @@ TEST_PROGRAM = [ins.Add('r1', 'r2', 'r3'),
 class TestFetch(unittest.TestCase):
 
     def setUp(self):
-        """Create a temporary program file and Fetch stage."""
         # Create temporary, convert and write TEST_PROGRAM.
-        (program, self.program_file) = tempfile.mkstemp()
-        encoding = locale.getpreferredencoding(False)
+        self.program_file = make_program_file(TEST_PROGRAM)
         self.test_program_str = [str(i) for i in TEST_PROGRAM]
-        data = b'\n'.join([bytearray(ins_str, encoding)
-                           for ins_str in self.test_program_str])
-        os.write(program, data)
-        os.close(program)
 
         # Initialize Fetch.
         self.reg_file = RegisterFile(10)
@@ -34,7 +27,6 @@ class TestFetch(unittest.TestCase):
                            self.feed_log)
 
     def tearDown(self):
-        """Remove temporary program file."""
         os.remove(self.program_file)
 
     def test_operate(self):
