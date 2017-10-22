@@ -36,3 +36,6 @@ class TestFetch(unittest.TestCase):
             self.assertListEqual(self.feed_log.log,
                                  self.test_program_str[:i])
             self.assertEqual(self.reg_file['pc'], i)
+        # PC is now beyond # program instructions. Tick ensures Fetch handles
+        # this gracefully.
+        self.fetch.tick()

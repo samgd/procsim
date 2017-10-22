@@ -18,8 +18,9 @@ class Fetch(Clocked):
 
     def operate(self):
         """Fetch next Instruction string, inc pc, and feed Decode if not busy."""
-        if not self.decode.busy():
-            ins = self.program[self.reg_file['pc']]
+        program_counter = self.reg_file['pc']
+        if not self.decode.busy() and program_counter < len(self.program):
+            ins = self.program[program_counter]
             self.decode.feed(ins)
             self.reg_file['pc'] += 1
 
