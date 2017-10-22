@@ -1,3 +1,4 @@
+from procsim.back_end.result import Result
 from procsim.instructions import BranchJump
 
 class Jump(BranchJump):
@@ -12,7 +13,17 @@ class Jump(BranchJump):
         self.imm = imm
 
     def execute(self, register_file):
-        raise NotImplementedError('TODO')
+        """Execute Jump and return the Result.
+
+        Note: This does _not_ write to the Result to the RegisterFile.
+
+        Args:
+            register_file: A RegisterFile to read Register values from.
+
+        Returns:
+            The Result.
+        """
+        return Result('pc', self.imm)
 
     def __repr__(self):
         return 'Jump(%r)' % self.imm
