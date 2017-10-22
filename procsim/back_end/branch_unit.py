@@ -12,7 +12,7 @@ class BranchUnit(ExecutionUnit):
         write_unit: WriteUnit to pass execution Result to.
     """
 
-    def __init__(self, register_file, write_unit):
+    def __init__(self, register_file, write_unit, fetch=None):
         super().__init__()
         self.reg_file = register_file
         self.write_unit = write_unit
@@ -20,6 +20,7 @@ class BranchUnit(ExecutionUnit):
         self.current_timer = 0
         self.future_inst = None
         self.future_timer = 0
+        self.fetch = fetch
 
     def feed(self, instruction):
         """Feed the BranchUnit an Instruction to execute.
@@ -38,7 +39,12 @@ class BranchUnit(ExecutionUnit):
     def operate(self):
         """Feed Result to the BranchUnit if possible."""
         if self.current_inst and self.current_timer == 0 and not self.write_unit.busy():
-            self.write_unit.feed(self.current_inst.execute(self.reg_file))
+            result = self.current_inst.execute(self.reg_file)
+            if result is None and self.fetch is not None:
+                self.fetch.pause = False
+            self.write_unit.feed(result)
+            if self.future_inst is self.current_inst:
+                self.future_inst = None
 
     def trigger(self):
         """Advance the state of the BranchUnit and init a new future state."""
@@ -46,7 +52,7 @@ class BranchUnit(ExecutionUnit):
         self.current_inst = self.future_inst
         self.current_timer = self.future_timer
         # Initialize future state.
-        if self.current_inst is None or self.current_timer == 0:
+        if self.current_inst is None:
             self.future_inst = None
             self.future_timer = 0
         else:

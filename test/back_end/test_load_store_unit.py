@@ -37,17 +37,18 @@ class TestLoadStoreUnit(unittest.TestCase):
 
         unit = LoadStoreUnit(self.reg_file, self.feed_log, self.memory)
         self.assertFalse(unit.busy(),
-                         'LoadStoreUnit busy after initialization')
+                         'LoadStoreUnit should not be busy after initialization')
         unit.feed(load)
         self.assertTrue(unit.busy(),
-                        'LoadStoreUnit not busy after being fed')
+                        'LoadStoreUnit should be busy after being fed')
+        unit.trigger()
         for _ in range(load.DELAY - 1):
             unit.tick()
             self.assertTrue(unit.busy(),
-                            'LoadStoreUnit not busy before DELAY ticks')
+                            'LoadStoreUnit should be busy before DELAY ticks')
         unit.tick()
         self.assertFalse(unit.busy(),
-                         'LoadStoreUnit busy after DELAY ticks')
+                         'LoadStoreUnit should not be busy after DELAY ticks')
 
     def test_capability(self):
         unit = LoadStoreUnit(self.reg_file, self.feed_log, self.memory)

@@ -40,17 +40,18 @@ class TestWriteUnit(unittest.TestCase):
         for write_delay in [1, 5, 10]:
             unit = WriteUnit(self.reg_file, write_delay)
             self.assertFalse(unit.busy(),
-                             'WriteUnit busy after initialization')
+                             'WriteUnit should not be busy after initialization')
             unit.feed(result)
             self.assertTrue(unit.busy(),
-                            'WriteUnit not busy after being fed')
+                            'WriteUnit should be busy after being fed')
+            unit.trigger()
             for _ in range(write_delay - 1):
                 unit.tick()
                 self.assertTrue(unit.busy(),
-                                'WriteUnit not busy before write_delay ticks')
+                                'WriteUnit should be busy before write_delay ticks')
             unit.tick()
             self.assertFalse(unit.busy(),
-                             'WriteUnit busy after write_delay ticks %d')
+                             'WriteUnit should not be busy after write_delay ticks %d')
 
     def test_capability(self):
         unit = WriteUnit(self.reg_file)

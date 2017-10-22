@@ -39,6 +39,8 @@ class IntegerUnit(ExecutionUnit):
         """Feed Result to the WriteUnit if possible."""
         if self.current_inst and self.current_timer == 0 and not self.write_unit.busy():
             self.write_unit.feed(self.current_inst.execute(self.reg_file))
+            if self.future_inst is self.current_inst:
+                self.future_inst = None
 
     def trigger(self):
         """Advance the state of the IntegerUnit and init a new future state."""
@@ -46,7 +48,7 @@ class IntegerUnit(ExecutionUnit):
         self.current_inst = self.future_inst
         self.current_timer = self.future_timer
         # Initialize future state.
-        if self.current_inst is None or self.current_timer == 0:
+        if self.current_inst is None:
             self.future_inst = None
             self.future_timer = 0
         else:

@@ -22,7 +22,7 @@ class TestIntegerUnit(unittest.TestCase):
         add.DELAY = 1
         unit = IntegerUnit(self.reg_file, self.feed_log)
         unit.feed(add)
-        unit.tick()
+        unit.trigger()
         unit.tick()
         self.assertEqual(self.feed_log.log, [Result('r1', 8)])
 
@@ -35,17 +35,18 @@ class TestIntegerUnit(unittest.TestCase):
         for ins in [add, addi]:
             unit = IntegerUnit(self.reg_file, self.feed_log)
             self.assertFalse(unit.busy(),
-                             'IntegerUnit busy after initialization')
+                             'IntegerUnit should not be busy after initialization')
             unit.feed(ins)
             self.assertTrue(unit.busy(),
-                            'IntegerUnit not busy after being fed')
+                            'IntegerUnit should be busy after being fed')
+            unit.trigger()
             for _ in range(ins.DELAY - 1):
                 unit.tick()
                 self.assertTrue(unit.busy(),
-                                'IntegerUnit not busy before DELAY ticks')
+                                'IntegerUnit should be busy before DELAY ticks')
             unit.tick()
             self.assertFalse(unit.busy(),
-                             'IntegerUnit busy after DELAY ticks')
+                             'IntegerUnit should not be busy after DELAY ticks')
 
     def test_capability(self):
         unit = IntegerUnit(self.reg_file, self.feed_log)

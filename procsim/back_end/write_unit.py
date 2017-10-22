@@ -10,7 +10,7 @@ class WriteUnit(ExecutionUnit):
             the register_file. (default 1)
     """
 
-    def __init__(self, register_file, write_delay=1):
+    def __init__(self, register_file, write_delay=1, fetch=None):
         super().__init__()
         self.register_file = register_file
         self.DELAY = write_delay
@@ -18,6 +18,7 @@ class WriteUnit(ExecutionUnit):
         self.current_timer = self.DELAY
         self.future_result = None
         self.future_timer = 0
+        self.fetch = fetch
 
     def feed(self, result):
         """Feed the WriteUnit a Result to write.
@@ -37,6 +38,10 @@ class WriteUnit(ExecutionUnit):
         """Write current Result to the RegisterFile if present and delay done."""
         if self.current_result and self.current_timer == 0:
             self.register_file[self.current_result.dest] = self.current_result.value
+            if self.future_result is self.current_result:
+                self.future_result = None
+            if self.fetch is not None:
+                self.fetch.pause = False
 
     def trigger(self):
         """Advance the state of the WriteUnit and init a new future state."""
@@ -44,7 +49,7 @@ class WriteUnit(ExecutionUnit):
         self.current_result = self.future_result
         self.current_timer = self.future_timer
         # Initialize future state.
-        if self.current_timer == 0:
+        if self.current_result is None:
             self.future_result = None
             self.future_timer = 0
         else:
