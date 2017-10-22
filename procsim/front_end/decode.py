@@ -2,9 +2,18 @@ import procsim.instructions as ins
 from procsim.pipeline_stage import PipelineStage
 
 class Decode(PipelineStage):
+    """Decode decodes an Instruction string to an Instruction.
+
+    Args:
+        reservation_station: ReservationStation to feed results to.
+
+    Attributes:
+        DELAY: Number of clock cycles required to decode an Instruction.
+            (default 1)
+    """
 
     def __init__(self, reservation_station):
-        super().__init()
+        super().__init__()
         self.res_stat = reservation_station
         self.DELAY = 1
         self.current_inst = None
