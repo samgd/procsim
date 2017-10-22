@@ -5,7 +5,7 @@ import unittest
 
 from procsim.front_end.fetch import Fetch
 from procsim.register_file import RegisterFile
-from test.front_end.decode_stub import DecodeStub
+from test.feed_log import FeedLog
 import procsim.instructions as ins
 
 TEST_PROGRAM = [ins.Add('r1', 'r2', 'r3'),
@@ -28,19 +28,19 @@ class TestFetch(unittest.TestCase):
 
         # Initialize Fetch.
         self.reg_file = RegisterFile(10)
-        self.decode_stub = DecodeStub()
+        self.feed_log = FeedLog()
         self.fetch = Fetch(self.reg_file,
                            self.program_file,
-                           self.decode_stub)
+                           self.feed_log)
 
     def tearDown(self):
         """Remove temporary program file."""
         os.remove(self.program_file)
 
     def test_operate(self):
-        """Test Fetch passes DecodeStub correct instruction strings."""
+        """Test Fetch feeds correct instruction strings."""
         for i in range(1, len(TEST_PROGRAM) + 1):
             self.fetch.tick()
-            self.assertListEqual(self.decode_stub.log,
+            self.assertListEqual(self.feed_log.log,
                                  self.test_program_str[:i])
             self.assertEqual(self.reg_file['pc'], i)

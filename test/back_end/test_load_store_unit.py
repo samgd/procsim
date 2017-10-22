@@ -6,7 +6,7 @@ from procsim.instructions import Load
 from procsim.instructions import MemoryAccess
 from procsim.memory import Memory
 from procsim.register_file import RegisterFile
-from test.back_end.write_unit_stub import WriteUnitStub
+from test.feed_log import FeedLog
 
 class TestLoadStoreUnit(unittest.TestCase):
 
@@ -14,28 +14,28 @@ class TestLoadStoreUnit(unittest.TestCase):
         init_values = {'r%d' % i: i for i in range(10)}
         self.reg_file = RegisterFile(10, init_values=init_values)
 
-        self.wu_stub = WriteUnitStub()
+        self.feed_log = FeedLog()
 
         self.memory = Memory(200)
         for i in range(len(self.memory)):
             self.memory[i] = i
 
     def test_correct_result_load(self):
-        """Test correct load Result computed by LoadStoreUnit and fed to WriteUnit."""
+        """Test correct load Result computed and fed by LoadStoreUnit."""
         load = Load('r0', 'r8')
         load.DELAY = 1
-        unit = LoadStoreUnit(self.reg_file, self.wu_stub, self.memory)
+        unit = LoadStoreUnit(self.reg_file, self.feed_log, self.memory)
         unit.feed(load)
         unit.tick()
         unit.tick()
-        self.assertEqual(self.wu_stub.result, Result('r0', 8))
+        self.assertEqual(self.feed_log.log, [Result('r0', 8)])
 
     def test_busy(self):
         """Test LoadStoreUnit busy method updates correctly after ticks."""
         load = Load('r0', 'r1')
         load.DELAY = 5
 
-        unit = LoadStoreUnit(self.reg_file, self.wu_stub, self.memory)
+        unit = LoadStoreUnit(self.reg_file, self.feed_log, self.memory)
         self.assertFalse(unit.busy(),
                          'LoadStoreUnit busy after initialization')
         unit.feed(load)
@@ -50,5 +50,5 @@ class TestLoadStoreUnit(unittest.TestCase):
                          'LoadStoreUnit busy after DELAY ticks')
 
     def test_capability(self):
-        unit = LoadStoreUnit(self.reg_file, self.wu_stub, self.memory)
+        unit = LoadStoreUnit(self.reg_file, self.feed_log, self.memory)
         self.assertEqual(unit.capability(), MemoryAccess)

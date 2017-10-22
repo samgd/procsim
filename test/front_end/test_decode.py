@@ -8,7 +8,7 @@ class TestDecode(unittest.TestCase):
     def setUp(self):
         self.rs = ''
 
-    def test_decode(self):
+    def test_decode_str(self):
         tests = [('add r1 r2 r3', ins.Add('r1', 'r2', 'r3')),
                  ('addi r1 r2 5', ins.AddI('r1', 'r2', 5)),
                  ('sub rd r0 r9', ins.Sub('rd', 'r0', 'r9')),

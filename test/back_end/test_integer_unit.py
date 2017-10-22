@@ -7,24 +7,24 @@ from procsim.instructions import Add
 from procsim.instructions import AddI
 from procsim.instructions import IntegerLogical
 from procsim.register_file import RegisterFile
-from test.back_end.write_unit_stub import WriteUnitStub
+from test.feed_log import FeedLog
 
 class TestIntegerUnit(unittest.TestCase):
 
     def setUp(self):
         init_values = {'r%d' % i: i for i in range(10)}
         self.reg_file = RegisterFile(10, init_values=init_values)
-        self.wu_stub = WriteUnitStub()
+        self.feed_log = FeedLog()
 
     def test_correct_result(self):
         """Test correct Result computed by IntegerUnit and fed to WriteUnit."""
         add = Add('r1', 'r3', 'r5')
         add.DELAY = 1
-        unit = IntegerUnit(self.reg_file, self.wu_stub)
+        unit = IntegerUnit(self.reg_file, self.feed_log)
         unit.feed(add)
         unit.tick()
         unit.tick()
-        self.assertEqual(self.wu_stub.result, Result('r1', 8))
+        self.assertEqual(self.feed_log.log, [Result('r1', 8)])
 
     def test_busy(self):
         """Test IntegerUnit busy method updates correctly after ticks."""
@@ -33,7 +33,7 @@ class TestIntegerUnit(unittest.TestCase):
         addi = AddI('r3', 'r5', 10)
         addi.DELAY = 10
         for ins in [add, addi]:
-            unit = IntegerUnit(self.reg_file, self.wu_stub)
+            unit = IntegerUnit(self.reg_file, self.feed_log)
             self.assertFalse(unit.busy(),
                              'IntegerUnit busy after initialization')
             unit.feed(ins)
@@ -48,5 +48,5 @@ class TestIntegerUnit(unittest.TestCase):
                              'IntegerUnit busy after DELAY ticks')
 
     def test_capability(self):
-        unit = IntegerUnit(self.reg_file, self.wu_stub)
+        unit = IntegerUnit(self.reg_file, self.feed_log)
         self.assertEqual(unit.capability(), IntegerLogical)
