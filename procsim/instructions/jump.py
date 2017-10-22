@@ -15,7 +15,7 @@ class Jump(BranchJump):
     def execute(self, register_file):
         """Execute Jump and return the Result.
 
-        Note: This does _not_ write to the Result to the RegisterFile.
+        Note: This does _not_ write to the RegisterFile.
 
         Args:
             register_file: A RegisterFile to read Register values from.
