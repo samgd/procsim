@@ -2,6 +2,7 @@ import unittest
 
 from procsim.front_end import decode
 from test.feed_log import FeedLog
+from test.front_end.utils import instruction_list_equal
 import procsim.instructions as ins
 
 class TestDecode(unittest.TestCase):
@@ -29,10 +30,12 @@ class TestDecode(unittest.TestCase):
                 self.decode.tick() # Fed ins_str becomes current state.
                 for _ in range(self.decode.DELAY):
                     # Check Instruction not output before DELAY ticks.
-                    self.assertEqual(self.feed_log.log, exp_log)
+                    self.assertTrue(instruction_list_equal(self.feed_log.log,
+                                                           exp_log))
                     self.decode.tick()
                 exp_log.append(exp_ins)
-                self.assertEqual(self.feed_log.log, exp_log)
+                self.assertTrue(instruction_list_equal(self.feed_log.log,
+                                                       exp_log))
 
     def test_busy(self):
         """Test IntegerUnit busy method updates correctly after ticks."""
@@ -54,4 +57,5 @@ class TestDecode(unittest.TestCase):
 
     def test_decode_str(self):
         for ins_str, exp_ins in self.test_strs:
-            self.assertEqual(decode._decode(ins_str), exp_ins)
+            self.assertTrue(instruction_list_equal([decode._decode(ins_str)],
+                                                   [exp_ins]))

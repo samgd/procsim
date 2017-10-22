@@ -7,6 +7,7 @@ from procsim.front_end.fetch import Fetch
 from procsim.register_file import RegisterFile
 from test.feed_log import FeedLog
 from test.front_end.utils import make_program_file
+from test.front_end.utils import instruction_list_equal
 import procsim.instructions as ins
 
 TEST_PROGRAM = [ins.Add('r1', 'r2', 'r3'),
@@ -48,5 +49,6 @@ class TestFetchDecodeIntegration(unittest.TestCase):
                     self.fetch.trigger()
                     self.decode.trigger()
 
-            self.assertEqual(self.feed_log.log, TEST_PROGRAM)
+            self.assertTrue(instruction_list_equal(self.feed_log.log,
+                                                   TEST_PROGRAM))
             self.cleanup_run()

@@ -57,6 +57,6 @@ class TestInstructions(unittest.TestCase):
         ins1 = ins.Add('r1', 'r2', 'r3')
         ins2 = ins.Add('r1', 'r2', 'r3')
         ins3 = ins.Jump(100)
-        self.assertTrue(ins1 == ins2)
+        self.assertFalse(ins1 == ins2)
         self.assertFalse(ins1 is ins2)
         self.assertFalse(ins2 == ins3)
