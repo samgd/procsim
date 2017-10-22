@@ -13,7 +13,6 @@ class TestReservationStation(unittest.TestCase):
         self.rs = ReservationStation(capacity=200)
         self.feed_log = FeedLog()
         self.feed_log.capability = lambda: Instruction
-        self.rs.register(self.feed_log)
 
     def test_invalid_capacity(self):
         """Test exception thrown when initialized with invalid capacity."""
@@ -24,6 +23,7 @@ class TestReservationStation(unittest.TestCase):
 
     def test_feed_busy(self):
         """Test busy operation when feeding Instructions."""
+        self.rs.register(self.feed_log)
         for capacity in [1, 5, 25, 200]:
             rs = ReservationStation(capacity=capacity)
             for _ in range(capacity):
@@ -39,12 +39,13 @@ class TestReservationStation(unittest.TestCase):
         """Ensure error raised when no ExecutionUnits exist for an Instruction."""
         # Feed Instruction and tick to move it from future to current state.
         self.rs.feed(Add('r0', 'r1', 'r2'))
-        self.rs.tick()
+        self.rs.trigger()
         with self.assertRaises(AssertionError):
             self.rs.tick()
 
     def test_instruction_passthrough_one_feed_one_execution(self):
         """Test one Instruction passes through ReservationStation OK."""
+        self.rs.register(self.feed_log)
         instruction = AddI('r0', 'r1', 10)
         self.rs.feed(instruction)
         self.rs.tick()
@@ -55,6 +56,7 @@ class TestReservationStation(unittest.TestCase):
 
     def test_instruction_passthrough_sequential_feed_one_execution(self):
         """Test sequential Instruction feeds pass through ReservationStation OK."""
+        self.rs.register(self.feed_log)
         fed_instructions = set()
         last_feed = None
         for i in range(100):
@@ -76,6 +78,7 @@ class TestReservationStation(unittest.TestCase):
 
     def test_instruction_passthrough_many_feed_one_exeuction(self):
         """Test many Instructions fed first then pass through OK."""
+        self.rs.register(self.feed_log)
         num_inst = 100
         fed_instructions = set()
         for i in range(num_inst):
