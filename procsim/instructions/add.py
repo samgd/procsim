@@ -17,7 +17,7 @@ class Add(IntegerLogical):
         self.r2 = r2
 
     def execute(self, register_file):
-        """Execute add and return the Result.
+        """Execute Add and return the Result.
 
         Note: This does _not_ write to the Result to the RegisterFile.
 
