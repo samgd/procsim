@@ -24,7 +24,7 @@ class TestLoadStoreUnit(unittest.TestCase):
         """Test correct load Result computed and fed by LoadStoreUnit."""
         load = Load('r0', 'r8')
         load.DELAY = 1
-        unit = LoadStoreUnit(self.reg_file, self.feed_log, self.memory)
+        unit = LoadStoreUnit(self.reg_file, self.memory, self.feed_log)
         unit.feed(load)
         unit.tick()
         unit.tick()
@@ -35,7 +35,7 @@ class TestLoadStoreUnit(unittest.TestCase):
         load = Load('r0', 'r1')
         load.DELAY = 5
 
-        unit = LoadStoreUnit(self.reg_file, self.feed_log, self.memory)
+        unit = LoadStoreUnit(self.reg_file, self.memory, self.feed_log)
         self.assertFalse(unit.busy(),
                          'LoadStoreUnit should not be busy after initialization')
         unit.feed(load)
@@ -51,5 +51,5 @@ class TestLoadStoreUnit(unittest.TestCase):
                          'LoadStoreUnit should not be busy after DELAY ticks')
 
     def test_capability(self):
-        unit = LoadStoreUnit(self.reg_file, self.feed_log, self.memory)
+        unit = LoadStoreUnit(self.reg_file, self.memory, self.feed_log)
         self.assertEqual(unit.capability(), MemoryAccess)

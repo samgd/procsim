@@ -9,15 +9,15 @@ class LoadStoreUnit(ExecutionUnit):
     Args:
         register_file: RegisterFile to read Register values from when executing
             operations.
-        write_unit: WriteUnit to pass execution Result to.
         memory: Memory to address when executing operations.
+        write_unit: WriteUnit to pass execution Result to.
     """
 
-    def __init__(self, register_file, write_unit, memory):
+    def __init__(self, register_file, memory, write_unit):
         super().__init__()
         self.reg_file = register_file
-        self.write_unit = write_unit
         self.memory = memory
+        self.write_unit = write_unit
         self.current_inst = None
         self.current_timer = 0
         self.future_inst = None
