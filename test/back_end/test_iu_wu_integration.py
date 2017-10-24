@@ -2,7 +2,6 @@ from copy import deepcopy
 import unittest
 
 from procsim.back_end.integer_unit import IntegerUnit
-from procsim.back_end.result import Result
 from procsim.back_end.write_unit import WriteUnit
 from procsim.instructions import Add
 from procsim.register_file import RegisterFile
