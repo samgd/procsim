@@ -3,6 +3,7 @@ import unittest
 
 from procsim.back_end.result import Result
 from procsim.instructions import Load
+from procsim.instructions import Store
 from procsim.memory import Memory
 from procsim.register_file import RegisterFile
 
@@ -20,7 +21,7 @@ class TestMemoryAccess(unittest.TestCase):
 
     def test_load_execute(self):
         """Ensure Load returns correct Result."""
-        for i in range(100):
+        for _ in range(100):
             rd = self.random_reg()
             r1 = self.random_reg()
             r_addr = self.random_addr()
@@ -29,6 +30,18 @@ class TestMemoryAccess(unittest.TestCase):
 
             exp_result = Result(rd, self.memory[r_addr])
             self.assertEqual(load.execute(self.reg_file, self.memory), exp_result)
+
+    def test_store_execute(self):
+        """Ensure Store returns correct Result."""
+        for _ in range(100):
+            rs = self.random_reg()
+            r1 = self.random_reg()
+            r_addr = self.random_addr()
+            self.reg_file[r1] = r_addr
+            store = Store(rs, r1)
+
+            exp_result = Result(r_addr, self.reg_file[rs], Memory)
+            self.assertEqual(store.execute(self.reg_file, self.memory), exp_result)
 
     def random_reg(self):
         """Return a random but valid Register name."""
