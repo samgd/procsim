@@ -1,3 +1,4 @@
+import random
 import unittest
 
 from procsim.clock import Clock
@@ -32,6 +33,21 @@ class TestClock(unittest.TestCase):
         for stub in self.stubs:
             self.assertTrue(stub.operate_called)
             self.assertTrue(stub.trigger_called)
+
+    def test_n_ticks(self):
+        """Ensure Clock records number of tick calls."""
+        exp_n_ticks = 0
+        self.assertEqual(self.clock.n_ticks, exp_n_ticks,
+                         'Clock n_ticks should be 0 after instantiation')
+
+        for _ in range(100):
+            more_ticks = random.randint(0, 100)
+            for _ in range(more_ticks):
+                self.clock.tick()
+            exp_n_ticks += more_ticks
+            msg = 'Clock n_ticks should be %d, got %d' % (exp_n_ticks,
+                                                          self.clock.n_ticks)
+            self.assertEqual(self.clock.n_ticks, exp_n_ticks, msg)
 
 class ClockedStub(Clocked):
     def __init__(self):

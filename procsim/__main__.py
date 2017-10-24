@@ -38,11 +38,10 @@ CLOCK.register(BRANCH_UNIT)
 
 clock_ticks = 0
 while True:
-    print(str(clock_ticks) + ':\t',
+    print(str(CLOCK.n_ticks) + ':\t',
           'r0:', REGISTER_FILE['r0'],
           'r1:', REGISTER_FILE['r1'],
           'r2:', REGISTER_FILE['r2'],
           'pc:', REGISTER_FILE['pc'])
     CLOCK.tick()
-    clock_ticks += 1
     input()
