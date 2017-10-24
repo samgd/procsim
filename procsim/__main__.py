@@ -42,6 +42,7 @@ while True:
           'r0:', REGISTER_FILE['r0'],
           'r1:', REGISTER_FILE['r1'],
           'r2:', REGISTER_FILE['r2'],
-          'pc:', REGISTER_FILE['pc'])
+          'pc:', REGISTER_FILE['pc'],
+          'mem[0]', MEMORY[0])
     CLOCK.tick()
     input()
