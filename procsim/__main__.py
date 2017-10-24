@@ -7,6 +7,7 @@ from procsim.back_end.write_unit import WriteUnit
 from procsim.clock import Clock
 from procsim.front_end.decode import Decode
 from procsim.front_end.fetch import Fetch
+from procsim.memory import Memory
 from procsim.register_file import RegisterFile
 
 ARGS = get_args()
@@ -15,11 +16,12 @@ REGISTER_FILE = RegisterFile(ARGS.n_gpr_registers,
                              ARGS.gpr_prefix)
 
 RES_STATION = ReservationStation()
+MEMORY = Memory(100)
 
 DECODE = Decode(RES_STATION)
 FETCH = Fetch(REGISTER_FILE, ARGS.FILE, DECODE, sequential=True)
 
-WRITE_UNIT = WriteUnit(REGISTER_FILE, fetch=FETCH)
+WRITE_UNIT = WriteUnit(REGISTER_FILE, MEMORY, fetch=FETCH)
 INTEGER_UNIT = IntegerUnit(REGISTER_FILE, WRITE_UNIT)
 BRANCH_UNIT = BranchUnit(REGISTER_FILE, WRITE_UNIT, fetch=FETCH)
 

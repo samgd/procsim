@@ -62,4 +62,4 @@ class TestIntegerLogical(unittest.TestCase):
 
     def random_reg(self):
         """Return a random but valid Register name."""
-        return 'r%d' % random.randint(0, self.register_len - 1)
+        return 'r%d' % random.randint(0, self.register_len - 2)

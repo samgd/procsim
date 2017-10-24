@@ -1,18 +1,22 @@
 from procsim.back_end.execution_unit import ExecutionUnit
-from procsim.instructions import Instruction
+from procsim.back_end.result import Result
+from procsim.memory import Memory
+from procsim.register import Register
 
 class WriteUnit(ExecutionUnit):
     """A WriteUnit writes Results to a RegisterFile after a number of ticks.
 
     Args:
-        register_file: RegisterFile to write results to.
+        register_file: RegisterFile to write Register Result values to.
+        memory: Memory to write Memory Result values to.
         write_delay: Number of trigger calls to wait before writing a Result to
             the register_file. (default 1)
     """
 
-    def __init__(self, register_file, write_delay=1, fetch=None):
+    def __init__(self, register_file, memory, write_delay=1, fetch=None):
         super().__init__()
         self.register_file = register_file
+        self.memory = memory
         self.DELAY = write_delay
         self.current_result = None
         self.current_timer = self.DELAY
@@ -37,7 +41,10 @@ class WriteUnit(ExecutionUnit):
     def operate(self):
         """Write current Result to the RegisterFile if present and delay done."""
         if self.current_result and self.current_timer == 0:
-            self.register_file[self.current_result.dest] = self.current_result.value
+            typ = self.current_result.typ
+            store = self.register_file if typ == Register else self.memory
+
+            store[self.current_result.dest] = self.current_result.value
             if self.future_result is self.current_result:
                 self.future_result = None
             if self.fetch is not None:
@@ -57,4 +64,4 @@ class WriteUnit(ExecutionUnit):
             self.future_timer = max(0, self.current_timer - 1)
 
     def capability(self):
-        return Instruction
+        return Result

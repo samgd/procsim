@@ -6,6 +6,7 @@ from procsim.back_end.result import Result
 from procsim.back_end.write_unit import WriteUnit
 from procsim.instructions import Add
 from procsim.register_file import RegisterFile
+from procsim.memory import Memory
 
 class TestIUWUIntegration(unittest.TestCase):
 
@@ -21,8 +22,9 @@ class TestIUWUIntegration(unittest.TestCase):
 
         for run in traces:
             reg_file = RegisterFile(3, init_values={'r1': 2, 'r2': 3})
-            write = WriteUnit(reg_file)
+            write = WriteUnit(reg_file, Memory(100))
             integ = IntegerUnit(reg_file, write)
+            integ.feed(Add('r0', 'r1', 'r2'))
 
             traces[run].append(deepcopy(reg_file))
             for _ in range(10):
