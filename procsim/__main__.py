@@ -11,7 +11,6 @@ from procsim.back_end.write_unit import WriteUnit
 from procsim.clock import Clock
 from procsim.front_end.decode import Decode
 from procsim.front_end.fetch import Fetch
-from procsim.register_file import RegisterFile
 
 args = get_args()
 
@@ -20,11 +19,10 @@ try:
 except:
     sys.exit('unable to load program %r' % args.PROGRAM)
 
-register_file = RegisterFile(args.n_gpr_registers,
-                             args.gpr_prefix)
+register_file = program.REGISTER_FILE
+memory = program.MEMORY
 
 res_station = ReservationStation()
-memory = program.MEMORY
 
 decode = Decode(res_station)
 fetch = Fetch(register_file, program.PROGRAM, decode, sequential=True)
@@ -52,7 +50,10 @@ while True:
           'r0:', register_file['r0'],
           'r1:', register_file['r1'],
           'r2:', register_file['r2'],
-          'pc:', register_file['pc'],
-          'mem[0]:', memory[0])
+          'r3:', register_file['r3'],
+          'r4:', register_file['r4'],
+          'r5:', register_file['r5'],
+          'pc:', register_file['pc'], '\n',
+          'memory:', memory.memory)
     clock.tick()
     input()
