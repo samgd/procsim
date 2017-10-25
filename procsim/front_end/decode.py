@@ -68,6 +68,8 @@ def _decode(instruction_str):
                'addi': lambda args: ins.AddI(args[0], args[1], int(args[2])),
                'sub': lambda args: ins.Sub(args[0], args[1], args[2]),
                'subi': lambda args: ins.SubI(args[0], args[1], int(args[2])),
+               'mul': lambda args: ins.Mul(args[0], args[1], args[2]),
+               'muli': lambda args: ins.MulI(args[0], args[1], int(args[2])),
                'ldr': lambda args: ins.Load(args[0], args[1]),
                'str': lambda args: ins.Store(args[0], args[1]),
                'j': lambda args: ins.Jump(int(args[0])),
