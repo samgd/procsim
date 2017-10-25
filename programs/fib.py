@@ -1,6 +1,9 @@
 from procsim.memory import Memory
+from procsim.register_file import RegisterFile
 
 MEMORY = Memory(1)
+
+REGISTER_FILE = RegisterFile(5)
 
 PROGRAM = ['addi r4 r4 0',
            'addi r0 r0 1',

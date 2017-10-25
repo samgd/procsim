@@ -1,3 +1,4 @@
+from procsim.register_file import RegisterFile
 from procsim.memory import Memory
 
 LEN_ARRAY = 10
@@ -7,6 +8,8 @@ for array_idx in range(2):
     for elem_idx in range(LEN_ARRAY):
         mem_idx = array_idx * LEN_ARRAY + elem_idx
         MEMORY[mem_idx] = elem_idx
+
+REGISTER_FILE = RegisterFile(6)
 
 # r0 holds len_array
 # r1 holds relative elem_idxs ([0...LEN_ARRAY - 1])
