@@ -2,12 +2,12 @@
 
 ## Usage
 
-procsim programs are Python modules that have a `MEMORY`, `REGISTER_FILE`, and `PROGRAM` attribute. Examples can be found in the `programs/` directory. 
+procsim programs are Python modules that have a `MEMORY`, `REGISTER_FILE`, and `PROGRAM` attribute. Examples can be found in the `programs/` directory.
 
 To run a program, pass the module name to procsim:
 
 ```sh
-python -m procsim program.fib
+python -m procsim programs.fib
 ```
 
 and then press enter to step through each clock cycle.
