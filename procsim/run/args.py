@@ -6,7 +6,7 @@ def get_args():
 
     parser = argparse.ArgumentParser(prog='procsim',
                                      description=DESCRIPTION)
-    parser.add_argument('FILE')
+    parser.add_argument('PROGRAM')
     parser.add_argument('--n-gpr-registers',
                         dest='n_gpr_registers',
                         type=int,

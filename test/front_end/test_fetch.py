@@ -1,33 +1,29 @@
-import os
 import unittest
 
 from procsim.front_end.fetch import Fetch
+from procsim.instructions import Add
+from procsim.instructions import AddI
+from procsim.instructions import Sub
+from procsim.instructions import SubI
 from procsim.register_file import RegisterFile
 from test.feed_log import FeedLog
-from test.front_end.utils import make_program_file
-import procsim.instructions as ins
 
-TEST_PROGRAM = [ins.Add('r1', 'r2', 'r3'),
-                ins.AddI('r2', 'r2', 5),
-                ins.SubI('r2', 'r2', 5),
-                ins.Sub('r1', 'r2', 'r3')]
+TEST_PROGRAM = [Add('r1', 'r2', 'r3'),
+                AddI('r2', 'r2', 5),
+                SubI('r2', 'r2', 5),
+                Sub('r1', 'r2', 'r3')]
 
 class TestFetch(unittest.TestCase):
 
     def setUp(self):
-        # Create temporary, convert and write TEST_PROGRAM.
-        self.program_file = make_program_file(TEST_PROGRAM)
         self.test_program_str = [str(i) for i in TEST_PROGRAM]
 
         # Initialize Fetch.
         self.reg_file = RegisterFile(10)
         self.feed_log = FeedLog()
         self.fetch = Fetch(self.reg_file,
-                           self.program_file,
+                           self.test_program_str,
                            self.feed_log)
-
-    def tearDown(self):
-        os.remove(self.program_file)
 
     def test_operate(self):
         """Test Fetch feeds correct instruction strings."""

@@ -1,35 +1,33 @@
 from copy import deepcopy
-import os
 import unittest
 
 from procsim.front_end.decode import Decode
 from procsim.front_end.fetch import Fetch
+from procsim.instructions import Add
+from procsim.instructions import AddI
+from procsim.instructions import Sub
+from procsim.instructions import SubI
 from procsim.register_file import RegisterFile
 from test.feed_log import FeedLog
-from test.front_end.utils import make_program_file
 from test.front_end.utils import instruction_list_equal
-import procsim.instructions as ins
 
-TEST_PROGRAM = [ins.Add('r1', 'r2', 'r3'),
-                ins.AddI('r2', 'r2', 5),
-                ins.SubI('r2', 'r2', 5),
-                ins.Sub('r1', 'r2', 'r3')]
+TEST_PROGRAM = [Add('r1', 'r2', 'r3'),
+                AddI('r2', 'r2', 5),
+                SubI('r2', 'r2', 5),
+                Sub('r1', 'r2', 'r3')]
 
 class TestFetchDecodeIntegration(unittest.TestCase):
 
     def init_run(self):
-        self.program_file = make_program_file(TEST_PROGRAM)
+        self.test_program_str = [str(i) for i in TEST_PROGRAM]
 
         self.feed_log = FeedLog()
         self.decode = Decode(self.feed_log)
 
         self.reg_file = RegisterFile(10)
         self.fetch = Fetch(self.reg_file,
-                           self.program_file,
+                           self.test_program_str,
                            self.decode)
-
-    def cleanup_run(self):
-        os.remove(self.program_file)
 
     def test_fetch_decode_integration(self):
         """Ensure different operate and trigger both produce the TEST_PROGRAM."""
@@ -51,4 +49,3 @@ class TestFetchDecodeIntegration(unittest.TestCase):
 
             self.assertTrue(instruction_list_equal(self.feed_log.log,
                                                    TEST_PROGRAM))
-            self.cleanup_run()

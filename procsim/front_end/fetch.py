@@ -5,7 +5,7 @@ class Fetch(Clocked):
 
     Args:
         register_file: RegisterFile to read program counter value from.
-        program_file: File containing assembly program.
+        program: List of string Instructions.
         decode: Decode unit to feed Fetched Instruction strings to.
         sequential: If True operate sets pause to True after every call. This
             WILL BE DEPRECIATED once pipelining has been implemented.
@@ -15,10 +15,9 @@ class Fetch(Clocked):
             DEPRECIATED once pipelining has been implemented.
     """
 
-    def __init__(self, register_file, program_file, decode, sequential=False):
+    def __init__(self, register_file, program, decode, sequential=False):
         super().__init__()
-        with open(program_file, 'r') as prog:
-            self.program = prog.read().splitlines()
+        self.program = program
         self.reg_file = register_file
         self.decode = decode
         self.pause = False
