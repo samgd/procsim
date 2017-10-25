@@ -11,6 +11,7 @@ class Blth(BranchJump):
     """
 
     def __init__(self, r1, r2, imm):
+        super().__init__()
         self.r1 = r1
         self.r2 = r2
         self.imm = imm
