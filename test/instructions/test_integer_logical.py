@@ -44,6 +44,22 @@ class TestIntegerLogical(unittest.TestCase):
                                         random.randint(-10000, 10000))}
         self.run_tests(test_spec)
 
+    def test_mul_execute(self):
+        test_spec = {'op': ins.Mul,
+                     'exp_fn': lambda r1, r2: self.reg_file[r1] * self.reg_file[r2],
+                     'arg_fn': lambda: (self.random_reg(),
+                                        self.random_reg(),
+                                        self.random_reg())}
+        self.run_tests(test_spec)
+
+    def test_muli_execute(self):
+        test_spec = {'op': ins.MulI,
+                     'exp_fn': lambda r1, v2: self.reg_file[r1] * v2,
+                     'arg_fn': lambda: (self.random_reg(),
+                                        self.random_reg(),
+                                        random.randint(-10000, 10000))}
+        self.run_tests(test_spec)
+
     # Test utilities.
     def run_tests(self, test_spec):
         """Run tests based on a test specification."""

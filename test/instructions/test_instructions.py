@@ -29,6 +29,18 @@ class TestInstructions(unittest.TestCase):
         self.assertEqual(repr(subi), "SubI('R0', 'R1', 10)")
         self.assertEqual(str(subi), 'subi R0 R1 10')
 
+    def test_mul_display(self):
+        args = ('R0', 'R1', 'R2')
+        mul = ins.Mul(*args)
+        self.assertEqual(repr(mul), "Mul('R0', 'R1', 'R2')")
+        self.assertEqual(str(mul), 'mul R0 R1 R2')
+
+    def test_muli_display(self):
+        args = ('R0', 'R1', 10)
+        muli = ins.MulI(*args)
+        self.assertEqual(repr(muli), "MulI('R0', 'R1', 10)")
+        self.assertEqual(str(muli), 'muli R0 R1 10')
+
     def test_load_display(self):
         args = ('r0', 'r1')
         load = ins.Load(*args)
