@@ -24,7 +24,7 @@ class RegisterFile:
                 self[name] = value
 
     def __eq__(self, other):
-        """Return True if all Register values are equal."""
+        """Return True if all Register names and values, including pc, are equal."""
         return self.registers == other.registers
 
     def __getitem__(self, name):
