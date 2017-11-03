@@ -25,9 +25,7 @@ class Result:
 
     def __eq__(self, other):
         """Results are equal if they have equal dest and value attributes."""
-        if type(other) is type(self):
-            return self.__dict__ == other.__dict__
-        return False
+        return type(other) is type(self) and self.__dict__ == other.__dict__
 
     def __repr__(self):
         return 'Result(%r, %r, %s)' % (self.dest, self.value, self.typ.__name__)
