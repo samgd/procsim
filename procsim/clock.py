@@ -13,8 +13,6 @@ class Clock:
 
     def register(self, component):
         """Register a Clocked component with the Clock."""
-        assert_msg = 'Non-Clocked component attempted to register with Clock'
-        assert isinstance(component, Clocked), assert_msg
         self.components.append(component)
 
     def operate(self):

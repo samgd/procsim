@@ -12,10 +12,6 @@ class TestClock(unittest.TestCase):
         for stub in self.stubs:
             self.clock.register(stub)
 
-    def test_register_assertion(self):
-        with self.assertRaises(AssertionError):
-            self.clock.register('foo')
-
     def test_operate(self):
         self.clock.operate()
         for stub in self.stubs:
