@@ -29,15 +29,15 @@ class ReservationStation(PipelineStage):
         Args:
             instruction: Instruction to insert.
         """
-        assert len(self.future_buffer) < self.CAPACITY, 'ReservationStation fed when busy'
+        assert len(self.future_buffer) < self.CAPACITY, 'ReservationStation fed when full'
         self.future_buffer.add(instruction)
 
-    def busy(self):
+    def full(self):
         """Return True if the ReservationStation is full (Instructions)."""
         return len(self.future_buffer) == self.CAPACITY
 
     def operate(self):
-        """Issue fed Instructions to capable and non-busy ExecutionUnits.
+        """Issue fed Instructions to capable and non-full ExecutionUnits.
 
         Raises:
             AssertionError if no ExecutionUnits exist that are capable of
@@ -49,7 +49,7 @@ class ReservationStation(PipelineStage):
             for capability in inspect.getmro(type(instruction)):
                 units = self.execution_units[capability]
                 units_exist |= len(units) > 0
-                free_units = {unit for unit in units if not unit.busy()}
+                free_units = {unit for unit in units if not unit.full()}
                 if len(free_units) < 1:
                     continue
                 unit = next(iter(free_units))

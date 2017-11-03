@@ -55,24 +55,24 @@ class TestWriteUnit(unittest.TestCase):
             # Reset RegisterFile.
             self.reg_file[result.dest] = 0
 
-    def test_feed_busy(self):
-        """Test busy returns True after feed and False after write_delay."""
+    def test_feed_full(self):
+        """Test full returns True after feed and False after write_delay."""
         result = Result('r0', 10)
         for write_delay in [1, 5, 10]:
             unit = WriteUnit(self.reg_file, self.memory, write_delay)
-            self.assertFalse(unit.busy(),
-                             'WriteUnit should not be busy after initialization')
+            self.assertFalse(unit.full(),
+                             'WriteUnit should not be full after initialization')
             unit.feed(result)
-            self.assertTrue(unit.busy(),
-                            'WriteUnit should be busy after being fed')
+            self.assertTrue(unit.full(),
+                            'WriteUnit should be full after being fed')
             unit.trigger()
             for _ in range(write_delay - 1):
                 unit.tick()
-                self.assertTrue(unit.busy(),
-                                'WriteUnit should be busy before write_delay ticks')
+                self.assertTrue(unit.full(),
+                                'WriteUnit should be full before write_delay ticks')
             unit.tick()
-            self.assertFalse(unit.busy(),
-                             'WriteUnit should not be busy after write_delay ticks %d')
+            self.assertFalse(unit.full(),
+                             'WriteUnit should not be full after write_delay ticks %d')
 
     def test_capability(self):
         unit = WriteUnit(self.reg_file, self.memory)

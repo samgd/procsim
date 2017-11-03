@@ -37,23 +37,23 @@ class TestDecode(unittest.TestCase):
                 self.assertTrue(instruction_list_equal(self.feed_log.log,
                                                        exp_log))
 
-    def test_busy(self):
-        """Test IntegerUnit busy method updates correctly after ticks."""
+    def test_full(self):
+        """Test IntegerUnit full method updates correctly after ticks."""
         for delay in [1, 2, 5, 10]:
             self.decode.DELAY = delay
             for ins_str, _ in self.test_strs:
-                self.assertFalse(self.decode.busy(),
-                                 'Decode busy after initialization')
+                self.assertFalse(self.decode.full(),
+                                 'Decode should not be full after initialization')
                 self.decode.feed(ins_str)
-                self.assertTrue(self.decode.busy(),
-                                'Decode not busy after being fed')
+                self.assertTrue(self.decode.full(),
+                                'Decode should be full after being fed')
                 for _ in range(self.decode.DELAY - 1):
                     self.decode.tick()
-                    self.assertTrue(self.decode.busy(),
-                                    'Decode not busy before DELAY ticks')
+                    self.assertTrue(self.decode.full(),
+                                    'Decode should be full before DELAY ticks')
                 self.decode.tick()
-                self.assertFalse(self.decode.busy(),
-                                 'Decode busy after DELAY ticks')
+                self.assertFalse(self.decode.full(),
+                                 'Decode should not be full after DELAY ticks')
 
     def test_decode_str(self):
         for ins_str, exp_ins in self.test_strs:

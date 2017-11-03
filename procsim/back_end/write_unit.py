@@ -30,11 +30,11 @@ class WriteUnit(ExecutionUnit):
         Args:
             result: Result to write.
         """
-        assert self.future_result is None, 'WriteUnit fed when busy'
+        assert self.future_result is None, 'WriteUnit fed when full'
         self.future_result = result
         self.future_timer = max(0, self.DELAY - 1)
 
-    def busy(self):
+    def full(self):
         """Return True if the WriteUnit's future state is non-empty."""
         return self.future_result is not None
 

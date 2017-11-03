@@ -1,7 +1,7 @@
 from procsim.feedable import Feedable
 
 class FeedLog(Feedable):
-    """FeedLog logs all values fed to it and is never busy.
+    """FeedLog logs all values fed to it and is never full.
 
     Attributes:
         log: List of fed food.
@@ -12,5 +12,5 @@ class FeedLog(Feedable):
     def feed(self, food):
         self.log.append(food)
 
-    def busy(self):
+    def full(self):
         return False

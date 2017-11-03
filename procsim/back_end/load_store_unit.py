@@ -29,17 +29,17 @@ class LoadStoreUnit(ExecutionUnit):
         Args:
             instruction: A MemoryAccess Instruction to execute.
         """
-        assert self.future_inst is None, 'LoadStoreUnit fed when busy'
+        assert self.future_inst is None, 'LoadStoreUnit fed when full'
         self.future_inst = instruction
         self.future_timer = max(0, instruction.DELAY - 1)
 
-    def busy(self):
+    def full(self):
         """Return True if the LoadStoreUnit's future state is non-empty."""
         return self.future_inst is not None
 
     def operate(self):
         """Feed Result to the WriteUnit if possible."""
-        if self.current_inst and self.current_timer == 0 and not self.write_unit.busy():
+        if self.current_inst and self.current_timer == 0 and not self.write_unit.full():
             self.write_unit.feed(self.current_inst.execute(self.reg_file, self.memory))
             if self.future_inst is self.current_inst:
                 self.future_inst = None

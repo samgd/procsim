@@ -28,17 +28,17 @@ class BranchUnit(ExecutionUnit):
         Args:
             instruction: An IntegerLogical Instruction to execute.
         """
-        assert self.future_inst is None, 'IntegerUnit fed when busy'
+        assert self.future_inst is None, 'IntegerUnit fed when full'
         self.future_inst = instruction
         self.future_timer = max(0, instruction.DELAY - 1)
 
-    def busy(self):
+    def full(self):
         """Return True if the BranchUnit's future state is non-empty."""
         return self.future_inst is not None
 
     def operate(self):
         """Feed Result to the BranchUnit if possible."""
-        if self.current_inst and self.current_timer == 0 and not self.write_unit.busy():
+        if self.current_inst and self.current_timer == 0 and not self.write_unit.full():
             result = self.current_inst.execute(self.reg_file)
             if result is None and self.fetch is not None:
                 self.fetch.pause = False

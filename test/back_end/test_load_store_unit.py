@@ -30,25 +30,25 @@ class TestLoadStoreUnit(unittest.TestCase):
         unit.tick()
         self.assertEqual(self.feed_log.log, [Result('r0', 8)])
 
-    def test_busy(self):
-        """Test LoadStoreUnit busy method updates correctly after ticks."""
+    def test_full(self):
+        """Test LoadStoreUnit fullmethod updates correctly after ticks."""
         load = Load('r0', 'r1')
         load.DELAY = 5
 
         unit = LoadStoreUnit(self.reg_file, self.memory, self.feed_log)
-        self.assertFalse(unit.busy(),
-                         'LoadStoreUnit should not be busy after initialization')
+        self.assertFalse(unit.full(),
+                         'LoadStoreUnit should not be full after initialization')
         unit.feed(load)
-        self.assertTrue(unit.busy(),
-                        'LoadStoreUnit should be busy after being fed')
+        self.assertTrue(unit.full(),
+                        'LoadStoreUnit should be full after being fed')
         unit.trigger()
         for _ in range(load.DELAY - 1):
             unit.tick()
-            self.assertTrue(unit.busy(),
-                            'LoadStoreUnit should be busy before DELAY ticks')
+            self.assertTrue(unit.full(),
+                            'LoadStoreUnit should be full before DELAY ticks')
         unit.tick()
-        self.assertFalse(unit.busy(),
-                         'LoadStoreUnit should not be busy after DELAY ticks')
+        self.assertFalse(unit.full(),
+                         'LoadStoreUnit should not be full after DELAY ticks')
 
     def test_capability(self):
         unit = LoadStoreUnit(self.reg_file, self.memory, self.feed_log)

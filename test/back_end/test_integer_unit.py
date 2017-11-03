@@ -26,27 +26,27 @@ class TestIntegerUnit(unittest.TestCase):
         unit.tick()
         self.assertEqual(self.feed_log.log, [Result('r1', 8)])
 
-    def test_busy(self):
-        """Test IntegerUnit busy method updates correctly after ticks."""
+    def test_full(self):
+        """Test IntegerUnit full method updates correctly after ticks."""
         add = Add('r0', 'r1', 'r6')
         add.DELAY = 5
         addi = AddI('r3', 'r5', 10)
         addi.DELAY = 10
         for ins in [add, addi]:
             unit = IntegerUnit(self.reg_file, self.feed_log)
-            self.assertFalse(unit.busy(),
-                             'IntegerUnit should not be busy after initialization')
+            self.assertFalse(unit.full(),
+                             'IntegerUnit should not be full after initialization')
             unit.feed(ins)
-            self.assertTrue(unit.busy(),
-                            'IntegerUnit should be busy after being fed')
+            self.assertTrue(unit.full(),
+                            'IntegerUnit should be full after being fed')
             unit.trigger()
             for _ in range(ins.DELAY - 1):
                 unit.tick()
-                self.assertTrue(unit.busy(),
-                                'IntegerUnit should be busy before DELAY ticks')
+                self.assertTrue(unit.full(),
+                                'IntegerUnit should be full before DELAY ticks')
             unit.tick()
-            self.assertFalse(unit.busy(),
-                             'IntegerUnit should not be busy after DELAY ticks')
+            self.assertFalse(unit.full(),
+                             'IntegerUnit should not be full after DELAY ticks')
 
     def test_capability(self):
         unit = IntegerUnit(self.reg_file, self.feed_log)

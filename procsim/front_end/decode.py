@@ -27,17 +27,17 @@ class Decode(PipelineStage):
         Args:
             instruction_str: An Instruction string to decode.
         """
-        assert self.future_inst is None, 'Decode fed when busy'
+        assert self.future_inst is None, 'Decode fed when full'
         self.future_inst = instruction_str
         self.future_timer = max(0, self.DELAY - 1)
 
-    def busy(self):
+    def full(self):
         """Return True if the Decode stages future state is non-empty."""
         return self.future_inst is not None
 
     def operate(self):
         """Feed decoded Instruction to the ReservationStation if possible."""
-        if self.current_inst and self.current_timer == 0 and not self.res_stat.busy():
+        if self.current_inst and self.current_timer == 0 and not self.res_stat.full():
             instruct = _decode(self.current_inst)
             self.res_stat.feed(instruct)
 

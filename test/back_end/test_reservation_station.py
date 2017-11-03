@@ -21,17 +21,17 @@ class TestReservationStation(unittest.TestCase):
             with self.assertRaises(ValueError):
                 ReservationStation(capacity=invalid)
 
-    def test_feed_busy(self):
-        """Test busy operation when feeding Instructions."""
+    def test_feed_full(self):
+        """Test full operation when feeding Instructions."""
         self.rs.register(self.feed_log)
         for capacity in [1, 5, 25, 200]:
             rs = ReservationStation(capacity=capacity)
             for _ in range(capacity):
-                self.assertFalse(rs.busy(),
-                                 'ReservationStation should not be busy after < capacity feeds')
+                self.assertFalse(rs.full(),
+                                 'ReservationStation should not be full after < capacity feeds')
                 rs.feed(Add('r0', 'r1', 'r2'))
-            self.assertTrue(rs.busy(),
-                            'ReservationStation should be busy after capacity feeds')
+            self.assertTrue(rs.full(),
+                            'ReservationStation should be full after capacity feeds')
             with self.assertRaises(AssertionError):
                 rs.feed(Add('r1', 'r2', 'r3'))
 
