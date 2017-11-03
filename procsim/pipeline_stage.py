@@ -1,5 +1,3 @@
-import abc
-
 from procsim.clocked import Clocked
 from procsim.feedable import Feedable
 
