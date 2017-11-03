@@ -41,9 +41,9 @@ class TestClock(unittest.TestCase):
             for _ in range(more_ticks):
                 self.clock.tick()
             exp_n_ticks += more_ticks
-            msg = 'Clock n_ticks should be %d, got %d' % (exp_n_ticks,
-                                                          self.clock.n_ticks)
-            self.assertEqual(self.clock.n_ticks, exp_n_ticks, msg)
+            self.assertEqual(self.clock.n_ticks, exp_n_ticks,
+                             'Clock n_ticks should be %d, got %d' % (exp_n_ticks,
+                                                                     self.clock.n_ticks))
 
 class ClockedStub(Clocked):
     def __init__(self):
