@@ -6,8 +6,8 @@ class Store(MemoryAccess):
     """Store instruction.
 
     Args:
-        rs: Store Register name.
-        r1: Source 1 Register name.
+        rs: Name of register to store.
+        r1: Name of register holding Memory.
     """
 
     def __init__(self, rs, r1):
