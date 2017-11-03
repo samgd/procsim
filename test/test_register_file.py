@@ -1,6 +1,7 @@
 import unittest
 
 from procsim.register_file import RegisterFile
+from procsim.register import Register
 
 class TestRegisterFile(unittest.TestCase):
 
