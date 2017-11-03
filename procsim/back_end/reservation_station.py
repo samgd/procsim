@@ -44,19 +44,18 @@ class ReservationStation(PipelineStage):
             executing the Instruction.
         """
         for instruction in self.current_buffer:
-            units_exist = False   # If no units exist for instruction, error.
-            # Iterate from most to least specific capability.
-            for capability in inspect.getmro(type(instruction)):
-                units = self.execution_units[capability]
-                units_exist |= len(units) > 0
-                free_units = {unit for unit in units if not unit.full()}
-                if len(free_units) < 1:
-                    continue
-                unit = next(iter(free_units))
-                unit.feed(instruction)
-                self.future_buffer.remove(instruction)
-                break
-            assert units_exist, 'Instruction %r has no ExecutionUnit' % instruction
+            exist = False
+            for cap in inspect.getmro(type(instruction)):
+                units = self.execution_units[cap]
+                exist = exist or units
+
+                idle = {u for u in units if not u.full()}
+                if idle:
+                    unit = next(iter(idle))
+                    unit.feed(instruction)
+                    self.future_buffer.remove(instruction)
+                    break
+            assert exist, 'Instruction %r has no ExecutionUnit' % instruction
 
     def trigger(self):
         """Free up buffer space by removing the issued Instructions."""
