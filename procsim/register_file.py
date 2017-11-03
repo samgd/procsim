@@ -9,7 +9,7 @@ class RegisterFile:
         n_gpr_registers: Number of general purpose Registers in the
             RegisterFile.
         gpr_prefix: Prefix added to each general purpose Register index to form
-            the Register name. General purpose Register indicies start from 0.
+            the Register name. General purpose Register indices start from 0.
             (default 'r')
         init_values: {register_name: value} dict to initialize the Register
             values from.

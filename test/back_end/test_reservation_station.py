@@ -76,7 +76,7 @@ class TestReservationStation(unittest.TestCase):
         self.rs.tick()
         self.assertEqual(set(self.feed_log.log), fed_instructions)
 
-    def test_instruction_passthrough_many_feed_one_exeuction(self):
+    def test_instruction_passthrough_many_feed_one_execution(self):
         """Test many Instructions fed first then pass through OK."""
         self.rs.register(self.feed_log)
         num_inst = 100

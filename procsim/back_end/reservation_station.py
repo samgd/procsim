@@ -67,7 +67,7 @@ class ReservationStation(PipelineStage):
         """Enable the ReservationStation to issue Instructions to the unit.
 
         Args:
-            exectuion_unit: ExecutionUnit to register with the
+            execution_unit: ExecutionUnit to register with the
                 ReservationStation.
         """
         self.execution_units[execution_unit.capability()].add(execution_unit)
