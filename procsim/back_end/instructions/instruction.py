@@ -1,6 +1,8 @@
 import abc
 
-class Instruction(abc.ABC):
+from procsim.back_end.subscriber import Subscriber
+
+class Instruction(Subscriber):
     """Base class for all instructions.
 
     Attributes:
