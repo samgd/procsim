@@ -3,9 +3,10 @@ from copy import copy
 from itertools import filterfalse
 import inspect
 
+from procsim.back_end.subscriber import Subscriber
 from procsim.pipeline_stage import PipelineStage
 
-class ReservationStation(PipelineStage):
+class ReservationStation(PipelineStage, Subscriber):
     """A ReservationStation that buffers Instructions until all of their
     execution requirements are met.
 
