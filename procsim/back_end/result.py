@@ -4,28 +4,26 @@ class Result:
     """Result of executing an Instruction.
 
     Args:
-        dest: Register or Memory address to write value in, depending on the
-            Result typ.
-        value: Value to write in dest.
-        typ: Result type. Specifies the semantic meaning of dest.
+        tag: Tag to identify location inside ROB.
+        value: Result of executing an instruction.
+        typ: Result type. Specifies the type of the Result.
             (default Register)
 
     Attributes:
-        dest: Register or Memory address to write value in, depending on the
-            Result typ.
-        value: Value to write in dest.
-        typ: Result type. Specifies the semantic meaning of dest.
+        tag: Tag to identify location inside ROB.
+        value: Result of executing an instruction.
+        typ: Result type. Specifies the type of the Result.
             (default Register)
     """
 
-    def __init__(self, dest, value, typ=Register):
-        self.dest = dest
+    def __init__(self, tag, value, typ=Register):
+        self.tag = tag
         self.value = value
         self.typ = typ
 
     def __eq__(self, other):
-        """Results are equal if they have equal dest and value attributes."""
+        """Results are equal if they have equal tag and value attributes."""
         return type(other) is type(self) and self.__dict__ == other.__dict__
 
     def __repr__(self):
-        return 'Result(%r, %r, %s)' % (self.dest, self.value, self.typ.__name__)
+        return 'Result(%r, %r, %s)' % (self.tag, self.value, self.typ.__name__)

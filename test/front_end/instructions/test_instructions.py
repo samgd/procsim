@@ -1,6 +1,6 @@
 import unittest
 
-import procsim.instructions as ins
+import procsim.front_end.instructions as ins
 
 class TestInstructions(unittest.TestCase):
     """Test Instruction repr and str to catch any superficial display bugs."""
