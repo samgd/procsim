@@ -1,5 +1,5 @@
 from procsim.back_end.execution_unit import ExecutionUnit
-from procsim.instructions import IntegerLogical
+from procsim.back_end.instructions.integer_logical import IntegerLogical
 
 class IntegerUnit(ExecutionUnit):
     """A single integer ExecutionUnit capable of integer and logical ops.
@@ -7,15 +7,12 @@ class IntegerUnit(ExecutionUnit):
     The execution delay is taken from the Instruction's DELAY attribute.
 
     Args:
-        register_file: RegisterFile to read Register values from when executing
-            operations.
-        write_unit: WriteUnit to pass execution Result to.
+        broadcast_bus: BroadcastBus to publish Results to.
     """
 
-    def __init__(self, register_file, write_unit):
+    def __init__(self, broadcast_bus):
         super().__init__()
-        self.reg_file = register_file
-        self.write_unit = write_unit
+        self.broadcast_bus = broadcast_bus
         self.current_inst = None
         self.current_timer = 0
         self.future_inst = None
@@ -36,9 +33,9 @@ class IntegerUnit(ExecutionUnit):
         return self.future_inst is not None
 
     def operate(self):
-        """Feed Result to the WriteUnit if possible."""
-        if self.current_inst and self.current_timer == 0 and not self.write_unit.full():
-            self.write_unit.feed(self.current_inst.execute(self.reg_file))
+        """Publish Result to the BroadcastBus."""
+        if self.current_inst and self.current_timer == 0:
+            self.broadcast_bus.publish(self.current_inst.execute())
             if self.future_inst is self.current_inst:
                 self.future_inst = None
 
