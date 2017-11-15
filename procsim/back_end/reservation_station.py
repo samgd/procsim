@@ -25,7 +25,7 @@ class ReservationStation(PipelineStage, Subscriber):
         self.future_buffer = set()
 
     def feed(self, instruction):
-        """Insert an Instruction to the ReservationStation.
+        """Insert an Instruction into the ReservationStation.
 
         Args:
             instruction: Instruction to insert.
@@ -34,7 +34,12 @@ class ReservationStation(PipelineStage, Subscriber):
         self.future_buffer.add(instruction)
 
     def full(self):
-        """Return True if the ReservationStation is full (Instructions)."""
+        """Return True if the ReservationStation is full.
+
+        Returns:
+            True if the ReservationStation is unable to be fed more
+            instructions.
+        """
         return len(self.future_buffer) == self.CAPACITY
 
     def operate(self):
