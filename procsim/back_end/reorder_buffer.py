@@ -38,12 +38,12 @@ class ReorderBuffer(PipelineStage, Subscriber):
         self.register_alias_table = {}
 
         # Used during conversion from front_end to back_end instructions.
-        self.translate_fn_lookup = {Add:  self.translate_arith_register,
-                                    AddI: self.translate_arith_imm,
-                                    Sub:  self.translate_arith_register,
-                                    SubI: self.translate_arith_imm,
-                                    Mul:  self.translate_arith_register,
-                                    MulI: self.translate_arith_imm}
+        self.translate_fn_lookup = {Add:  self._translate_arith_register,
+                                    AddI: self._translate_arith_imm,
+                                    Sub:  self._translate_arith_register,
+                                    SubI: self._translate_arith_imm,
+                                    Mul:  self._translate_arith_register,
+                                    MulI: self._translate_arith_imm}
         self.operation_lookup = {Add:  lambda o1, o2: o1 + o2,
                                  AddI: lambda o1, o2: o1 + o2,
                                  Sub:  lambda o1, o2: o1 - o2,
@@ -110,7 +110,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         """Update the value of the QueueEntry ID that matches the result tag."""
         self.future_queue[result.tag].value = result.value
 
-    def translate_arith_register(self, front_end_ins):
+    def _translate_arith_register(self, front_end_ins):
         """Return a backend Instruction formed from a frontend instruction.
 
         This function will increment the ReorderBuffer's future queue tail
@@ -134,7 +134,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
                               operand_1,
                               operand_2)
 
-    def translate_arith_imm(self, front_end_ins):
+    def _translate_arith_imm(self, front_end_ins):
         """Return a backend Instruction formed from a frontend instruction.
 
         This function will increment the ReorderBuffer's future queue tail
