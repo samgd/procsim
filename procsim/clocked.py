@@ -1,7 +1,12 @@
 import abc
 
 class Clocked(abc.ABC):
-    """A Clocked component changes state based on the tick of a Clock."""
+    """A Clocked component changes state based on the tick of a Clock.
+
+    Separating the state computation from the state advancement allows a set of
+    Clocked instances to interact and compute a new state deterministically
+    regardless of the order that the tick method is called on each.
+    """
 
     @abc.abstractmethod
     def operate(self):
