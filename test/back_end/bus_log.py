@@ -13,3 +13,7 @@ class BusLog(BroadcastBus):
     def publish(self, message):
         self.log.append(message)
         super().publish(message)
+
+    def reset(self):
+        """Reset log."""
+        self.log = []
