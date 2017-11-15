@@ -44,6 +44,8 @@ class ReservationStation(PipelineStage):
             executing the Instruction.
         """
         for instruction in self.current_buffer:
+            if not instruction.can_dispatch():
+                continue
             exist = False
             for cap in inspect.getmro(type(instruction)):
                 units = self.execution_units[cap]
@@ -70,3 +72,7 @@ class ReservationStation(PipelineStage):
                 ReservationStation.
         """
         self.execution_units[execution_unit.capability()].add(execution_unit)
+
+    def receive(self, result):
+        for instruction in self.current_buffer:
+            instruction.receive(result)

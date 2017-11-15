@@ -1,10 +1,10 @@
 import random
 import unittest
 
+from procsim.back_end.instructions.instruction import Instruction
+from procsim.back_end.instructions.integer_logical import IntegerLogical
 from procsim.back_end.reservation_station import ReservationStation
-from procsim.instructions import Add
-from procsim.instructions import AddI
-from procsim.instructions import Instruction
+from procsim.back_end.result import Result
 from test.feed_log import FeedLog
 
 class TestReservationStation(unittest.TestCase):
@@ -13,6 +13,10 @@ class TestReservationStation(unittest.TestCase):
         self.rs = ReservationStation(capacity=200)
         self.feed_log = FeedLog()
         self.feed_log.capability = lambda: Instruction
+        self.generate_add = lambda: IntegerLogical('ROB1',
+                                                   lambda o1, o2: o1 + o2,
+                                                   random.randint(-100, 100),
+                                                   random.randint(-100, 100))
 
     def test_invalid_capacity(self):
         """Test exception thrown when initialized with invalid capacity."""
@@ -29,16 +33,16 @@ class TestReservationStation(unittest.TestCase):
             for _ in range(capacity):
                 self.assertFalse(rs.full(),
                                  'ReservationStation should not be full after < capacity feeds')
-                rs.feed(Add('r0', 'r1', 'r2'))
+                rs.feed(self.generate_add())
             self.assertTrue(rs.full(),
                             'ReservationStation should be full after capacity feeds')
             with self.assertRaises(AssertionError):
-                rs.feed(Add('r1', 'r2', 'r3'))
+                rs.feed(self.generate_add())
 
     def test_tick_no_execution_units(self):
         """Ensure error raised when no ExecutionUnits exist for an Instruction."""
         # Feed Instruction and tick to move it from future to current state.
-        self.rs.feed(Add('r0', 'r1', 'r2'))
+        self.rs.feed(self.generate_add())
         self.rs.trigger()
         with self.assertRaises(AssertionError):
             self.rs.tick()
@@ -46,7 +50,7 @@ class TestReservationStation(unittest.TestCase):
     def test_instruction_passthrough_one_feed_one_execution(self):
         """Test one Instruction passes through ReservationStation OK."""
         self.rs.register(self.feed_log)
-        instruction = AddI('r0', 'r1', 10)
+        instruction = self.generate_add()
         self.rs.feed(instruction)
         self.rs.tick()
         self.assertListEqual(self.feed_log.log, [])
@@ -62,7 +66,7 @@ class TestReservationStation(unittest.TestCase):
         for i in range(100):
             # Skip feeding occasionally to insert bubbles into the pipeline.
             if not i % 7 == 0:
-                last_feed = AddI('r0', 'r1', i)
+                last_feed = self.generate_add()
                 self.rs.feed(last_feed)
                 fed_instructions.add(last_feed)
             else:
@@ -82,7 +86,7 @@ class TestReservationStation(unittest.TestCase):
         num_inst = 100
         fed_instructions = set()
         for i in range(num_inst):
-            instruction = AddI('r0', 'r1', i)
+            instruction = self.generate_add()
             self.rs.feed(instruction)
             fed_instructions.add(instruction)
         self.rs.tick()
@@ -90,3 +94,23 @@ class TestReservationStation(unittest.TestCase):
         for i in range(num_inst):
             self.rs.tick()
         self.assertEqual(set(self.feed_log.log), fed_instructions)
+
+    def test_instructions_receive_published_results(self):
+        """Test Instructions receive published results and dispatch OK."""
+        ins = IntegerLogical('ROB1', lambda o1, o2: o1 - o2, 'ROB2', 'ROB3')
+        self.rs.register(self.feed_log)
+
+        self.rs.feed(ins)
+        self.rs.trigger()
+
+        self.rs.receive(Result('ROB4', 100))
+        self.rs.tick()
+        self.assertListEqual(self.feed_log.log, [])
+
+        self.rs.receive(Result('ROB3', 100))
+        self.rs.tick()
+        self.assertListEqual(self.feed_log.log, [])
+
+        self.rs.receive(Result('ROB2', 50))
+        self.rs.tick()
+        self.assertListEqual(self.feed_log.log, [ins])
