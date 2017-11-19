@@ -72,47 +72,49 @@ class TestReorderBuffer(unittest.TestCase):
 
     def test_inorder_commit(self):
         """Ensure instruction Results are committed in-order."""
-        for capacity in [1, 5, 25, 200]:
-            # Initialize test components.
-            self.log.reset()
-            act_rf = RegisterFile(capacity,
-                                  init_values={'r%d' % i: 0 for i in range(capacity)})
-            exp_rf = RegisterFile(capacity,
-                                  init_values={'r%d' % i: 0 for i in range(capacity)})
-            rob = ReorderBuffer(act_rf, self.log, capacity)
-            rob.WIDTH = random.randint(1, 2*capacity)
+        for _ in range(30):
+            for capacity in [1, 5, 25, 200]:
+                # Initialize test components.
+                self.log.reset()
+                act_rf = RegisterFile(capacity,
+                                      init_values={'r%d' % i: 0 for i in range(capacity)})
+                exp_rf = RegisterFile(capacity,
+                                      init_values={'r%d' % i: 0 for i in range(capacity)})
+                rob = ReorderBuffer(act_rf, self.log, capacity)
+                rob.WIDTH = random.randint(1, 2*capacity)
 
-            # Feed instructions into ROB.
-            n_ins = random.randint(1, capacity)
-            register_names = []
-            for i in range(n_ins):
-                add = self.generate_add(capacity)
-                register_names.append(add.rd)
-                rob.feed(add)
-            rob.tick()
-
-            # Generate a Result value for each fed instruction.
-            result_vals = [random.randint(1, 10000) for _ in range(n_ins)]
-
-            # Publish all but first result in reverse order to ROB. Should be
-            # no updates to act_rf as the first instruction is stalled!
-            for i in reversed(range(1, n_ins)):
-                rob.receive(Result(self.log.log[i].tag, result_vals[i]))
+                # Feed instructions into ROB.
+                n_ins = random.randint(1, capacity)
+                register_names = []
+                for i in range(n_ins):
+                    add = self.generate_add(capacity)
+                    register_names.append(add.rd)
+                    rob.feed(add)
                 rob.tick()
-                self.assertEqual(exp_rf, act_rf)
 
-            # Publish result of first instruction - all can now be comitted in
-            # turn.
-            rob.receive(Result(self.log.log[0].tag, result_vals[0]))
+                # Generate a Result value for each fed instruction.
+                result_vals = [random.randint(1, 10000) for _ in range(n_ins)]
 
-            # Group updates into ROB width chunks.
-            updates = list(zip(register_names, result_vals))
-            group_updates = [updates[i:i + rob.WIDTH]
-                             for i in range(0, len(updates), rob.WIDTH)]
+                # Publish all but first result in reverse order to ROB. Should be
+                # no updates to act_rf as the first instruction is stalled!
+                for i in reversed(range(1, n_ins)):
+                    rob.receive(Result(self.log.log[i].tag, result_vals[i]))
+                    rob.tick()
+                    self.assertEqual(exp_rf, act_rf)
 
-            # Ensure in-order commit of width instructions per tick.
-            for group in group_updates:
+                # Publish result of first instruction - all can now be comitted in
+                # turn.
+                rob.receive(Result(self.log.log[0].tag, result_vals[0]))
+
+                # Group updates into ROB width chunks.
+                updates = list(zip(register_names, result_vals))
+                group_updates = [updates[i:i + rob.WIDTH]
+                                 for i in range(0, len(updates), rob.WIDTH)]
+
+                # Ensure in-order commit of width instructions per tick.
+                for group in group_updates:
+                    rob.tick()
+                    for (name, result) in group:
+                        exp_rf[name] = result
+                    self.assertEqual(exp_rf, act_rf)
                 rob.tick()
-                for (name, result) in group:
-                    exp_rf[name] = result
-                self.assertEqual(exp_rf, act_rf)
