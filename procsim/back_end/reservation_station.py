@@ -30,7 +30,8 @@ class ReservationStation(PipelineStage, Subscriber):
         Args:
             instruction: Instruction to insert.
         """
-        assert len(self.future_buffer) < self.CAPACITY, 'ReservationStation fed when full'
+        assert len(self.future_buffer) < self.CAPACITY,\
+            'ReservationStation fed when full'
         self.future_buffer.add(instruction)
 
     def full(self):
@@ -38,7 +39,7 @@ class ReservationStation(PipelineStage, Subscriber):
 
         Returns:
             True if the ReservationStation is unable to be fed more
-            instructions.
+            Instructions.
         """
         return len(self.future_buffer) == self.CAPACITY
 
