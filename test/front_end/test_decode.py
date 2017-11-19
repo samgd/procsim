@@ -3,7 +3,7 @@ import unittest
 from procsim.front_end import decode
 from test.feed_log import FeedLog
 from test.front_end.utils import instruction_list_equal
-import procsim.instructions as ins
+import procsim.front_end.instructions as ins
 
 class TestDecode(unittest.TestCase):
 

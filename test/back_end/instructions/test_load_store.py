@@ -8,7 +8,10 @@ class TestLoadStore(unittest.TestCase):
 
     def test_receive_and_can_dispatch(self):
         for op in [Load, Store]:
-            ins = op('ROB1', 'ROB2', 'ROB3')
+            args = ('ROB1', 'ROB2')
+            if op == Store:
+                args += ('ROB3',)
+            ins = op(*args)
             self.assertFalse(ins.can_dispatch())
 
             ins.receive(Result('ROB4', 0))
@@ -22,5 +25,6 @@ class TestLoadStore(unittest.TestCase):
             self.assertTrue(ins.can_dispatch())
 
             ins.receive(Result('ROB3', 0))
-            self.assertEqual(ins.value, 0)
+            exp_val = 0 if op == Store else None
+            self.assertEqual(ins.value, exp_val)
             self.assertTrue(ins.can_dispatch())

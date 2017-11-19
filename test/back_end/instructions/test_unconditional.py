@@ -1,6 +1,7 @@
 import unittest
 
 from procsim.back_end.instructions.unconditional import Unconditional
+from procsim.back_end.instructions.branch import Branch
 from procsim.back_end.result import Result
 
 class TestUnconditional(unittest.TestCase):
@@ -23,4 +24,4 @@ class TestUnconditional(unittest.TestCase):
         with self.assertRaises(ValueError):
             ins.execute()
         ins.receive(Result('ROB4', 7))
-        self.assertEqual(ins.execute(), Result('ROB10', 7))
+        self.assertEqual(ins.execute(), Result('ROB10', 7, Branch))

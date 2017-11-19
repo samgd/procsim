@@ -9,19 +9,15 @@ class MemoryAccess(Instruction):
         value: Value to Store or Load to Memory.
     """
 
-    def __init__(self, tag, address, value):
+    def __init__(self, tag, address):
         super().__init__()
         self.DELAY = 4
         self.tag = tag
         self.address = address
-        self.value = value
 
     def receive(self, result):
         if self.address == result.tag:
             self.address = result.value
-        if self.value == result.tag:
-            self.value = result.value
 
     def can_dispatch(self):
-        # Only need address to dispatch to MOB.
         return isinstance(self.address, int)

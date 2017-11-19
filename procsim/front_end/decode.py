@@ -1,5 +1,5 @@
-import procsim.instructions as ins
 from procsim.pipeline_stage import PipelineStage
+import procsim.front_end.instructions as ins
 
 class Decode(PipelineStage):
     """Decode decodes an Instruction string to an Instruction.

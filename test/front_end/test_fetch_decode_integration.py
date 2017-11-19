@@ -3,10 +3,10 @@ import unittest
 
 from procsim.front_end.decode import Decode
 from procsim.front_end.fetch import Fetch
-from procsim.instructions import Add
-from procsim.instructions import AddI
-from procsim.instructions import Sub
-from procsim.instructions import SubI
+from procsim.front_end.instructions import Add
+from procsim.front_end.instructions import AddI
+from procsim.front_end.instructions import Sub
+from procsim.front_end.instructions import SubI
 from procsim.register_file import RegisterFile
 from test.feed_log import FeedLog
 from test.front_end.utils import instruction_list_equal
