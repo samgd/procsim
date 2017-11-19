@@ -20,6 +20,9 @@ class Store(MemoryAccess):
             self.value = result.value
 
     def execute(self):
-        if not isinstance(self.address, int) or not isinstance(self.value, int):
+        if not self.can_execute():
             raise ValueError('unable to execute: operand(s) not available')
         return Result(self.tag, (self.address, self.value), typ=Store)
+
+    def can_execute(self):
+        return isinstance(self.address, int) and isinstance(self.value, int)

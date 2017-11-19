@@ -7,28 +7,34 @@ from procsim.memory import Memory
 
 class TestLoadStore(unittest.TestCase):
 
-    def test_receive_and_can_dispatch(self):
+    def test_receive_and_can_dispatch_execute(self):
         for op in [Load, Store]:
             args = ('ROB1', 'ROB2')
             if op == Store:
                 args += ('ROB3',)
             ins = op(*args)
             self.assertFalse(ins.can_dispatch())
+            self.assertFalse(ins.can_execute())
 
             ins.receive(Result('ROB4', 0))
             self.assertFalse(ins.can_dispatch())
+            self.assertFalse(ins.can_execute())
 
             ins.receive(Result('ROB1', 0))
             self.assertFalse(ins.can_dispatch())
+            self.assertFalse(ins.can_execute())
 
             ins.receive(Result('ROB2', 7))
             self.assertEqual(ins.address, 7)
             self.assertTrue(ins.can_dispatch())
+            if op == Load:
+                self.assertTrue(ins.can_execute())
 
             if op == Store:
                 ins.receive(Result('ROB3', 0))
                 self.assertEqual(ins.value, 0)
                 self.assertTrue(ins.can_dispatch())
+                self.assertTrue(ins.can_execute())
 
     def test_load_execute(self):
         memory = Memory(64)
@@ -46,3 +52,4 @@ class TestLoadStore(unittest.TestCase):
                 store.execute()
             store.receive(result)
         self.assertEqual(store.execute(), Result('ROB2', (5, 10), typ=Store))
+
