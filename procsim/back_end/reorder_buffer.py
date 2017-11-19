@@ -27,9 +27,11 @@ class ReorderBuffer(PipelineStage, Subscriber):
             raise ValueError('capacity must be >= 1')
         self.CAPACITY = capacity
         self.ID_PREFIX = 'ROB'
-        self.current_head_id = 0
+        # Invariant: head_id's point to first entry in queue. tail_id's point
+        # to next free slot in queue.
+        self.current_head_id = None
         self.current_tail_id = 0
-        self.future_head_id = 0
+        self.future_head_id = None
         self.future_tail_id = 0
         self.current_queue = {}
         self.future_queue = {}
@@ -78,13 +80,26 @@ class ReorderBuffer(PipelineStage, Subscriber):
     def operate(self):
         """Commit, in-order, completed instructions."""
         n_commit = 0
-        while n_commit < self.WIDTH and self.future_head_id != self.current_tail_id:
-            # Head QueueEntry.
-            id = self.ID_PREFIX + str(self.future_head_id)
+        start_head_id = self.current_head_id
+        while self.current_head_id is not None:
+            if self.current_head_id == self.current_tail_id:
+                # Tail reached - committed all possible instructions.
+                self.current_head_id = None
+                break
+            if n_commit > 0 and self.current_head_id == start_head_id:
+                # Looped back to start - committed all possible instructions.
+                self.current_head_id = None
+                break
+            if n_commit == self.WIDTH:
+                # Unable to commit any more this cycle.
+                break
+
+            id = self.ID_PREFIX + str(self.current_head_id)
             head = self.current_queue[id]
-            # Value still being computed.
             if head.value is None:
-                return
+                # Value still being computed.
+                break
+
             # Write value to RegisterFile and remove from future queue.
             self.register_file[head.dest] = head.value
             del self.future_queue[id]
@@ -96,8 +111,19 @@ class ReorderBuffer(PipelineStage, Subscriber):
                     del self.register_alias_table[head.dest]
             except KeyError:
                 pass
-            self.future_head_id = (self.future_head_id + 1) % self.CAPACITY
+            self.current_head_id = (self.current_head_id + 1) % self.CAPACITY
             n_commit += 1
+
+        # Establish invariant.
+        if self.current_head_id is not None:
+            # future_head_id points to next instruction to commit (when
+            # possible).
+            self.future_head_id = self.current_head_id
+        elif self.future_tail_id == self.current_tail_id:
+            # Processed all current instructions and no more have been fed
+            # (future_tail_id hasn't moved) so future_head_id had nothing to
+            # point to.
+            self.future_head_id = None
 
     def trigger(self):
         """Future queue state becomes the current queue state."""
@@ -159,9 +185,23 @@ class ReorderBuffer(PipelineStage, Subscriber):
                               operand_2)
 
     def _get_queue_id(self):
-        """Allocate and return a ROB queue ID."""
+        """Allocate and return a ROB ID.
+
+        Returns:
+            ROB ID (string).
+
+        Raises:
+            AssertionError if no ROB ID available (internal queue is full).
+        """
+        assert self.future_tail_id is not None,\
+            'No free slot in ROB'
         id = self.ID_PREFIX + str(self.future_tail_id)
+        # Establish the invariant.
+        if self.future_head_id is None:
+            self.future_head_id = self.future_tail_id
         self.future_tail_id = (self.future_tail_id + 1) % self.CAPACITY
+        if self.future_tail_id == self.future_head_id:
+            self.future_tail_id = None
         return id
 
     def _translate_operand(self, register_name):

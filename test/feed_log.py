@@ -14,3 +14,6 @@ class FeedLog(Feedable):
 
     def full(self):
         return False
+
+    def reset(self):
+        self.log = []

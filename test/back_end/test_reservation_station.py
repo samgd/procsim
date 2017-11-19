@@ -32,10 +32,10 @@ class TestReservationStation(unittest.TestCase):
             rs = ReservationStation(capacity=capacity)
             for _ in range(capacity):
                 self.assertFalse(rs.full(),
-                                 'ReservationStation should not be full after < capacity feeds')
+                                 'ReservationStation should not be full after < %d feeds' % capacity)
                 rs.feed(self.generate_add())
             self.assertTrue(rs.full(),
-                            'ReservationStation should be full after capacity feeds')
+                            'ReservationStation should be full after %d feeds' % capacity)
             with self.assertRaises(AssertionError):
                 rs.feed(self.generate_add())
 
