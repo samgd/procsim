@@ -103,7 +103,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
             # Write value to RegisterFile and remove from future queue.
             self.register_file[head.dest] = head.value
             del self.future_queue[id]
-            # If RAT points to this ROB id then we can remove the RAT entry as
+            # If RAT points to this ROB ID then we can remove the RAT entry as
             # the value is now in the RegisterFile.
             try:
                 rat_id = self.register_alias_table[head.dest]
@@ -111,6 +111,10 @@ class ReorderBuffer(PipelineStage, Subscriber):
                     del self.register_alias_table[head.dest]
             except KeyError:
                 pass
+            # ROB ID now free.
+            if self.future_tail_id is None:
+                self.future_tail_id = self.current_head_id
+
             self.current_head_id = (self.current_head_id + 1) % self.CAPACITY
             n_commit += 1
 
