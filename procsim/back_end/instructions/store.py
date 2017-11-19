@@ -1,4 +1,5 @@
 from procsim.back_end.instructions.memory_access import MemoryAccess
+from procsim.back_end.result import Result
 
 class Store(MemoryAccess):
     """Store MemoryAccess Instruction.
@@ -18,5 +19,7 @@ class Store(MemoryAccess):
         if self.value == result.tag:
             self.value = result.value
 
-    def execute(self, memory):
-        raise NotImplementedError('TODO')
+    def execute(self):
+        if not isinstance(self.address, int) or not isinstance(self.value, int):
+            raise ValueError('unable to execute: operand(s) not available')
+        return Result(self.tag, (self.address, self.value), typ=Store)

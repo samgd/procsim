@@ -1,4 +1,5 @@
 from procsim.back_end.instructions.memory_access import MemoryAccess
+from procsim.back_end.result import Result
 
 class Load(MemoryAccess):
     """Load MemoryAccess Instruction.
@@ -10,10 +11,11 @@ class Load(MemoryAccess):
 
     def __init__(self, tag, address):
         super().__init__(tag, address)
-        self.value = None
 
     def receive(self, result):
         super().receive(result)
 
     def execute(self, memory):
-        raise NotImplementedError('TODO')
+        if not self.can_dispatch():
+            raise ValueError('unable to execute: operand(s) not available')
+        return Result(self.tag, memory[self.address])
