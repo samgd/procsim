@@ -2,11 +2,14 @@ import math
 import random
 import unittest
 
+from procsim.back_end.load_store_queue import LoadStoreQueue
 from procsim.back_end.reorder_buffer import ReorderBuffer
 from procsim.back_end.reservation_station import ReservationStation
 from procsim.back_end.result import Result
 from procsim.front_end.instructions.add import Add
+from procsim.memory import Memory
 from procsim.register_file import RegisterFile
+from test.back_end.bus_log import BusLog
 from test.feed_log import FeedLog
 
 class TestReorderBuffer(unittest.TestCase):
@@ -14,7 +17,10 @@ class TestReorderBuffer(unittest.TestCase):
     def setUp(self):
         self.n_gpr_registers = 31
         self.rf = RegisterFile(self.n_gpr_registers)
+        self.memory = Memory(128)
+        self.bus = BusLog()
         self.log = FeedLog()
+        self.lsq = LoadStoreQueue(self.memory, self.bus, capacity=32)
         self.generate_add = lambda cap: Add('r%d' % random.randint(0, cap - 1),
                                         'r%d' % random.randint(0, cap - 1),
                                         'r%d' % random.randint(0, cap - 1))
@@ -24,28 +30,39 @@ class TestReorderBuffer(unittest.TestCase):
         for _ in range(100):
             invalid = random.randint(-1000, 0)
             with self.assertRaises(ValueError):
-                ReorderBuffer(self.rf, self.log, capacity=invalid)
+                ReorderBuffer(self.rf, self.log, self.lsq, capacity=invalid)
 
     def test_feed_full(self):
         """Test full operation when feeding Instructions."""
         for rob_capacity in [1, 5, 25, 200]:
             for rs_capacity in [1, 5, 25, 200]:
-                limit = min(rob_capacity, rs_capacity)
-                rs = ReservationStation(capacity=rs_capacity)
-                rob = ReorderBuffer(self.rf, rs, capacity=rob_capacity)
-                for _ in range(limit):
-                    self.assertFalse(rob.full(),
-                                     'ReorderBuffer should not be full after < %d feeds' % limit)
-                    rob.feed(self.generate_add(self.n_gpr_registers))
-                self.assertTrue(rob.full(),
-                                'ReorderBuffer should be full after %d feeds' % limit)
-                with self.assertRaises(AssertionError):
-                    rob.feed(self.generate_add(self.n_gpr_registers))
+                for lsq_capacity in [1, 5, 25, 200]:
+                    register_limit = min(rob_capacity, rs_capacity)
+                    memory_limit = min(rob_capacity, lsq_capacity)
+
+                    rs = ReservationStation(capacity=rs_capacity)
+                    lsq = LoadStoreQueue(self.memory,
+                                         self.bus,
+                                         capacity=lsq_capacity)
+                    rob = ReorderBuffer(self.rf,
+                                        rs,
+                                        lsq,
+                                        capacity=rob_capacity)
+
+                    for _ in range(register_limit):
+                        ins = self.generate_add(self.n_gpr_registers)
+                        self.assertFalse(rob.full(ins),
+                                         'ReorderBuffer should not be full after < %d feeds' % register_limit)
+                        rob.feed(ins)
+                    self.assertTrue(rob.full(self.generate_add(self.n_gpr_registers)),
+                                    'ReorderBuffer should be full after %d feeds' % register_limit)
+                    with self.assertRaises(AssertionError):
+                        rob.feed(self.generate_add(self.n_gpr_registers))
 
     def test_get_queue_id(self):
         """Test that _get_queue_id throws an error on wrap-around."""
         for capacity in [1, 5, 25, 200]:
-            rob = ReorderBuffer(self.rf, self.log, capacity=capacity)
+            rob = ReorderBuffer(self.rf, self.log, self.lsq, capacity=capacity)
             for _ in range(capacity):
                 rob._get_queue_id()
             with self.assertRaises(AssertionError):
@@ -55,7 +72,7 @@ class TestReorderBuffer(unittest.TestCase):
         """Test that commit frees a slot in the ROB."""
         for capacity in [1, 5, 25, 200]:
             log = FeedLog()
-            rob = ReorderBuffer(self.rf, log, capacity=capacity)
+            rob = ReorderBuffer(self.rf, log, self.lsq, capacity=capacity)
             # Half fill.
             for _ in range(capacity // 2):
                 rob.feed(self.generate_add(self.n_gpr_registers))
@@ -76,11 +93,10 @@ class TestReorderBuffer(unittest.TestCase):
             for capacity in [1, 5, 25, 200]:
                 # Initialize test components.
                 self.log.reset()
-                act_rf = RegisterFile(capacity,
-                                      init_values={'r%d' % i: 0 for i in range(capacity)})
-                exp_rf = RegisterFile(capacity,
-                                      init_values={'r%d' % i: 0 for i in range(capacity)})
-                rob = ReorderBuffer(act_rf, self.log, capacity)
+                zeros = {'r%d' % i: 0 for i in range(capacity)}
+                act_rf = RegisterFile(capacity, init_values=zeros)
+                exp_rf = RegisterFile(capacity, init_values=zeros)
+                rob = ReorderBuffer(act_rf, self.log, self.lsq, capacity)
                 rob.WIDTH = random.randint(1, 2*capacity)
 
                 # Feed instructions into ROB.

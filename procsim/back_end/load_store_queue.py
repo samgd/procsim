@@ -49,14 +49,14 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         if len(self.current_queue) == 0:
             return
         head = self.current_queue[0]
-        if not head.can_execute():
+        if not head.can_dispatch():
             return
         head.DELAY = max(0, head.DELAY - 1)
-        if head.DELAY > 0 and isinstance(head, Load):
+        if head.DELAY > 0:
             return
-        args = (self.memory,) if isinstance(head, Load) else ()
-        result = head.execute(*args)
-        self.broadcast_bus.publish(result)
+        result = head.execute(self.memory)
+        if result:
+            self.broadcast_bus.publish(result)
         del self.current_queue[0]
         del self.future_queue[0]
 

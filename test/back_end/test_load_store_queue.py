@@ -12,6 +12,7 @@ class TestLoadStoreQueue(unittest.TestCase):
 
     def setUp(self):
         self.memory = Memory(128)
+        self.reset_memory()
         self.bus = BusLog()
 
     def test_invalid_capacity(self):
@@ -37,7 +38,7 @@ class TestLoadStoreQueue(unittest.TestCase):
     def test_instructions_receive_published_results(self):
         """Test Instructions receive published results OK."""
         load = Load('ROB1', 'ROB2')
-        store = Store('ROB3', 'ROB4', 'ROB2')
+        store = Store('ROB4', 'ROB2')
         lsq = LoadStoreQueue(self.memory, self.bus, 32)
         lsq.feed(load)
         lsq.feed(store)
@@ -64,24 +65,20 @@ class TestLoadStoreQueue(unittest.TestCase):
                 self.assertListEqual(self.bus.log,
                                      [load.execute(self.memory)])
 
-    def test_store_execute_correct_result_no_delay(self):
-        """Test that the correct Store Result is published - no delay req."""
+    def test_store_execute_correct_result_and_delay(self):
+        """Test that the correct Store Result is written to Memory."""
         for _ in range(50):
             for delay in [1, 5, 25, 200]:
                 self.bus.reset()
-                store = Store('ROB1',
-                              random.randint(0, len(self.memory) - 1),
+                store = Store(random.randint(0, len(self.memory) - 1),
                               random.randint(1, 10000))
-                store.DELAY = delay # Should not matter at this stage.
+                store.DELAY = delay
                 lsq = LoadStoreQueue(self.memory, self.bus, 32)
-                self.memory[store.address] = 0 # Should not be changed!
                 lsq.feed(store)
+                for _ in range(delay):
+                    lsq.tick()
                 lsq.tick()
-                lsq.tick()
-                self.assertEqual(self.memory[store.address], 0,
-                                 'Store execute should not change memory')
-                self.assertListEqual(self.bus.log,
-                                     [store.execute()])
+                self.assertEqual(self.memory[store.address], store.value)
 
     def test_inorder_execute(self):
         """Ensure Instructions are executed in-order."""
@@ -101,12 +98,12 @@ class TestLoadStoreQueue(unittest.TestCase):
         for _ in range(sum([ins.DELAY for ins in instructions])):
             lsq.tick()
         # Compute expected sequence of Results published by LoadStoreQueue.
+        self.reset_memory()
         exp_results = []
         for ins in instructions:
-            if isinstance(ins, Load):
-                exp_results.append(ins.execute(self.memory))
-            else:
-                exp_results.append(ins.execute())
+            result = ins.execute(self.memory)
+            if result:
+                exp_results.append(result)
         self.assertListEqual(self.bus.log, exp_results)
 
     def generate_memory_access(self, capacity):
@@ -120,5 +117,8 @@ class TestLoadStoreQueue(unittest.TestCase):
 
     def generate_store(self, capacity):
         return Store('ROB%d' % random.randint(0, capacity - 1),
-                     'ROB%d' % random.randint(0, capacity - 1),
                      'ROB%d' % random.randint(0, capacity - 1))
+
+    def reset_memory(self):
+        for i in range(len(self.memory)):
+            self.memory[i] = i

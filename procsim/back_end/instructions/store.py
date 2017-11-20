@@ -10,8 +10,8 @@ class Store(MemoryAccess):
         value: Value to Store to Memory.
     """
 
-    def __init__(self, tag, address, value):
-        super().__init__(tag, address)
+    def __init__(self, address, value):
+        super().__init__('Store', address)
         self.value = value
 
     def receive(self, result):
@@ -19,10 +19,10 @@ class Store(MemoryAccess):
         if self.value == result.tag:
             self.value = result.value
 
-    def execute(self):
-        if not self.can_execute():
-            raise ValueError('unable to execute: operand(s) not available')
-        return Result(self.tag, (self.address, self.value), typ=Store)
-
-    def can_execute(self):
+    def can_dispatch(self):
         return isinstance(self.address, int) and isinstance(self.value, int)
+
+    def execute(self, memory):
+        if not self.can_dispatch():
+            raise ValueError('unable to execute: operand(s) not available')
+        memory[self.address] = self.value

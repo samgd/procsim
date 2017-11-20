@@ -16,9 +16,6 @@ class Load(MemoryAccess):
         super().receive(result)
 
     def execute(self, memory):
-        if not self.can_execute():
+        if not self.can_dispatch():
             raise ValueError('unable to execute: operand(s) not available')
         return Result(self.tag, memory[self.address])
-
-    def can_execute(self):
-        return self.can_dispatch()

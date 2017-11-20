@@ -23,8 +23,3 @@ class MemoryAccess(Instruction):
 
     def can_dispatch(self):
         return isinstance(self.address, int)
-
-    @abc.abstractmethod
-    def can_execute(self):
-        """Return True if the MemoryAccess Instruction can be executed."""
-        pass
