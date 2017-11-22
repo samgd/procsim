@@ -38,7 +38,6 @@ reorder_buffer = ReorderBuffer(register_file,
                                reservation_station,
                                load_store_queue)
 
-
 decode = Decode(reorder_buffer)
 fetch = Fetch(register_file, program.PROGRAM, decode)
 

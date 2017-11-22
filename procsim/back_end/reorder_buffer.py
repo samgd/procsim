@@ -102,15 +102,17 @@ class ReorderBuffer(PipelineStage, Subscriber):
                 dest = 'pc'
                 value = front_end_ins.branch_info
                 typ = Conditional
+                spec_exec = False
                 self.spec_exec = True
             else:
                 dest = front_end_ins.rd
                 value = None
                 typ = None
+                spec_exec = self.spec_exec
             self.future_queue[back_end_ins.tag] = QueueEntry(dest,
                                                              value=value,
                                                              typ=typ,
-                                                             spec_exec=self.spec_exec)
+                                                             spec_exec=spec_exec)
 
         # Feed to stage furthur down pipeline.
         typ = self.type_lookup[type(front_end_ins)]
@@ -203,7 +205,6 @@ class ReorderBuffer(PipelineStage, Subscriber):
                 entry.value = entry.value.not_taken_addr
             else:
                 entry.value = entry.value.taken_addr
-            entry.spec_exec = False
         entry.done = True
 
     def set_pipeline_flush_root(self, root):
@@ -345,7 +346,11 @@ class ReorderBuffer(PipelineStage, Subscriber):
             that will yield the value.
         """
         if register_name in self.register_alias_table:
-            return self.register_alias_table[register_name]
+            rob_id = self.register_alias_table[register_name]
+            entry = self.future_queue[rob_id]
+            if entry.done:
+                return entry.value
+            return rob_id
         return self.register_file[register_name]
 
     def _process_queue_entry(self, entry):

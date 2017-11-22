@@ -34,7 +34,7 @@ class IntegerUnit(ExecutionUnit):
 
     def operate(self):
         """Publish Result to the BroadcastBus."""
-        if self.current_inst and self.current_timer == 0:
+        if self.current_inst is not None and self.current_timer == 0:
             self.broadcast_bus.publish(self.current_inst.execute())
             if self.future_inst is self.current_inst:
                 self.future_inst = None

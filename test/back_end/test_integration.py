@@ -67,4 +67,3 @@ class TestIntegration(unittest.TestCase):
                              [0, 2, 7, 3, 4, 5])
         self.assertListEqual([self.memory[i] for i in range(len(self.memory))],
                              [0, 1, 2, 3, 4, 5, 6, 2, 8, 9])
-
