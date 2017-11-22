@@ -203,6 +203,24 @@ class ReorderBuffer(PipelineStage, Subscriber):
         entry.done = True
         entry.spec_exec = False
 
+    def set_pipeline_flush_root(self, root):
+        pass
+
+    def flush(self):
+        self.current_head_id = None
+        self.current_tail_id = 0
+        self.future_head_id = None
+        self.future_tail_id = 0
+        self.current_queue = {}
+        self.future_queue = {}
+
+        self.register_alias_table = {}
+
+        self.spec_exec = False
+
+        self.reservation_station.flush()
+        self.load_store_queue.flush()
+
     def _translate_arith_register(self, front_end_ins):
         """Return a backend Instruction formed from a frontend instruction.
 
@@ -372,6 +390,8 @@ class ReorderBuffer(PipelineStage, Subscriber):
         else:
             # Incorrect prediction.
             #    - Flush the pipeline
+            #        - Call flush on fetch unit to propagate downwards
+            #    - Write new PC
             pass
 
 class QueueEntry:

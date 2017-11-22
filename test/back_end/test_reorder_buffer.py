@@ -14,6 +14,7 @@ from procsim.memory import Memory
 from procsim.register_file import RegisterFile
 from test.back_end.bus_log import BusLog
 from test.feed_log import FeedLog
+from test.flushable_log import FlushableLog
 
 class TestReorderBuffer(unittest.TestCase):
 
@@ -170,3 +171,31 @@ class TestReorderBuffer(unittest.TestCase):
             rob.tick()
             self.assertEqual(self.rf['r1'], r1_value)
             r1_value += 1
+
+    def test_flush(self):
+        """Ensure flush of ReorderBuffer, LoadStoreQueue and ReservationStation."""
+        rs = FlushableLog()
+        rs.full = lambda: False
+        rs.feed = lambda x: None
+        lsq = FlushableLog()
+        lsq.full = lambda: False
+        lsq.feed = lambda x: None
+
+        for rob_capacity in [1, 5, 25, 200]:
+            for rs_capacity in [1, 5, 25, 200]:
+                for lsq_capacity in [1, 5, 25, 200]:
+                    register_limit = min(rob_capacity, rs_capacity)
+
+                    rs.reset()
+                    lsq.reset()
+                    rob = ReorderBuffer(self.rf, rs, lsq, capacity=rob_capacity)
+
+                    for _ in range(register_limit):
+                        rob.feed(self.generate_add(self.n_gpr_registers))
+                    rob.flush()
+                    self.assertFalse(rob.full(self.generate_add(self.n_gpr_registers)),
+                                     'ReorderBuffer should not be full after flush')
+                    self.assertEqual(rs.n_flush, 1,
+                                     'ReorderBuffer must flush ReservationStation')
+                    self.assertEqual(lsq.n_flush, 1,
+                                     'ReorderBuffer must flush LoadStoreQueue')
