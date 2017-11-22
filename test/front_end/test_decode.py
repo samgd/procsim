@@ -3,6 +3,7 @@ import unittest
 from procsim.front_end.branch_info import BranchInfo
 from procsim.front_end import decode
 from test.feed_log import FeedLog
+from test.flushable_log import FlushableLog
 from test.front_end.utils import instruction_list_equal
 import procsim.front_end.instructions as ins
 
@@ -10,6 +11,10 @@ class TestDecode(unittest.TestCase):
 
     def setUp(self):
         self.feed_log = FeedLog()
+        # ReorderBuffer full method takes a param. Modify FeedLog to ignore it.
+        self.feed_log._full = self.feed_log.full
+        self.feed_log.full = lambda x: self.feed_log._full()
+
         self.decode = decode.Decode(self.feed_log)
         self.test_strs = [('add r1 r2 r3', ins.Add('r1', 'r2', 'r3')),
                           ('addi r1 r2 5', ins.AddI('r1', 'r2', 5)),
@@ -65,3 +70,16 @@ class TestDecode(unittest.TestCase):
                 exp_ins.branch_info = act_ins['branch_info']
             self.assertTrue(instruction_list_equal([decode._decode(act_ins)],
                                                    [exp_ins]))
+
+    def test_flush(self):
+        """Ensure flush flushes Decode and ReorderBuffer."""
+        log = FlushableLog()
+        self.feed_log.flush = log.flush
+
+        self.decode.feed(self.test_strs[0])
+        self.assertTrue(self.decode.full(),
+                        'Decode should be full after being fed')
+        self.decode.flush()
+        self.assertFalse(self.decode.full(),
+                         'Decode should not be full after flush')
+        self.assertEqual(log.n_flush, 1, 'Decode must flush ReorderBuffer')

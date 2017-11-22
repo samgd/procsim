@@ -5,16 +5,16 @@ class Decode(PipelineStage):
     """Decode decodes an Instruction string to an Instruction.
 
     Args:
-        reservation_station: ReservationStation to feed results to.
+        reorder_buffer: ReorderBuffer to feed results to.
 
     Attributes:
         DELAY: Number of clock cycles required to decode an Instruction.
             (default 1)
     """
 
-    def __init__(self, reservation_station):
+    def __init__(self, reorder_buffer):
         super().__init__()
-        self.res_stat = reservation_station
+        self.reorder_buffer = reorder_buffer
         self.DELAY = 1
         self.current_inst = None
         self.current_timer = 0
@@ -37,10 +37,11 @@ class Decode(PipelineStage):
         return self.future_inst is not None
 
     def operate(self):
-        """Feed decoded Instruction to the ReservationStation if possible."""
-        if self.current_inst and self.current_timer == 0 and not self.res_stat.full():
+        """Feed decoded Instruction to the ReorderBuffer if possible."""
+        if self.current_inst and self.current_timer == 0:
             instruct = _decode(self.current_inst)
-            self.res_stat.feed(instruct)
+            if not self.reorder_buffer.full(instruct):
+                self.reorder_buffer.feed(instruct)
 
     def trigger(self):
         """Advance the state of the Decode stage and init a new future state."""
@@ -54,6 +55,14 @@ class Decode(PipelineStage):
         else:
             self.future_inst = self.current_inst
             self.future_timer = max(0, self.current_timer - 1)
+
+    def flush(self):
+        self.current_inst = None
+        self.current_timer = 0
+        self.future_inst = None
+        self.future_timer = 0
+
+        self.reorder_buffer.flush()
 
 def _decode(instruction):
     """Return the instruction string decoded into an Instruction.
