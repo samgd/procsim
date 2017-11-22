@@ -1,7 +1,11 @@
 from procsim.clocked import Clocked
+from procsim.front_end.branch_info import BranchInfo
 
 class Fetch(Clocked):
     """Fetch instruction at address in program counter and feed to Decode stage.
+
+    The Fetch unit has logic to detect conditional branch instructions. It will
+    tag each with a branch_info attribute that has a BranchInfo object as value.
 
     Args:
         register_file: RegisterFile to read program counter value from.
@@ -28,10 +32,23 @@ class Fetch(Clocked):
         program_counter = self.reg_file['pc']
         if not self.pause and not self.decode.full() and program_counter < len(self.program):
             ins = self.program[program_counter]
-            self.decode.feed(ins)
+            food = {'instruction_str': ins}
+            try:
+                branch_info = self._parse_branch_info(ins, program_counter + 1)
+                food['branch_info'] = branch_info
+            except:
+                pass
+            self.decode.feed(food)
             self.reg_file['pc'] += 1
             if self.sequential:
                 self.pause = True
+
+    def _parse_branch_info(self, cond_branch, next_pc):
+        """Return BranchInfo for a conditional branch instruction."""
+        fields = cond_branch.split(' ')
+        if fields[0] != 'blth':
+            raise ValueError('instruction is not a conditional branch')
+        return BranchInfo(False, int(fields[3]), next_pc)
 
     def trigger(self):
         pass

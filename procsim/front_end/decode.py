@@ -21,14 +21,15 @@ class Decode(PipelineStage):
         self.future_inst = None
         self.future_timer = 0
 
-    def feed(self, instruction_str):
+    def feed(self, instruction):
         """Feed the Decode stage an Instruction string to decode.
 
         Args:
-            instruction_str: An Instruction string to decode.
+            instruction: A dictionary containing at least the instruction_str
+            key with value being a string to decode.
         """
         assert self.future_inst is None, 'Decode fed when full'
-        self.future_inst = instruction_str
+        self.future_inst = instruction
         self.future_timer = max(0, self.DELAY - 1)
 
     def full(self):
@@ -54,11 +55,11 @@ class Decode(PipelineStage):
             self.future_inst = self.current_inst
             self.future_timer = max(0, self.current_timer - 1)
 
-def _decode(instruction_str):
+def _decode(instruction):
     """Return the instruction string decoded into an Instruction.
 
     Args:
-        instruction_str: Instruction to decode.
+        instruction: Dictionary containing instruction_str to decode.
 
     Returns:
         Instruction if instruction_str is valid.
@@ -74,8 +75,11 @@ def _decode(instruction_str):
                'str': lambda args: ins.Store(args[0], args[1]),
                'j': lambda args: ins.Jump(int(args[0])),
                'blth': lambda args: ins.Blth(args[0], args[1], int(args[2]))}
-    fields = instruction_str.split(' ')
+    fields = instruction['instruction_str'].split(' ')
     try:
-        return gen_ins[fields[0]](fields[1:])
+        front_end_ins = gen_ins[fields[0]](fields[1:])
+        if fields[0] == 'blth':
+            front_end_ins.branch_info = instruction['branch_info']
+        return front_end_ins
     except:
-        raise ValueError('unknown instruction %r' % instruction_str)
+        raise ValueError('unknown instruction %r' % instruction)

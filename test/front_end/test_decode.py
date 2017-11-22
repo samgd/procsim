@@ -1,5 +1,6 @@
 import unittest
 
+from procsim.front_end.branch_info import BranchInfo
 from procsim.front_end import decode
 from test.feed_log import FeedLog
 from test.front_end.utils import instruction_list_equal
@@ -18,6 +19,9 @@ class TestDecode(unittest.TestCase):
                           ('str r99 r100', ins.Store('r99', 'r100')),
                           ('j 1000', ins.Jump(1000)),
                           ('blth r1 r2 10', ins.Blth('r1', 'r2', 10))]
+        self.test_strs = [({'instruction_str': ins_str}, exp_ins)
+                          for (ins_str, exp_ins) in self.test_strs]
+        self.test_strs[7][0]['branch_info'] = BranchInfo(False, 10, 9)
 
     def test_correct_result(self):
         """Test correct Result computed and fed by Decode stage."""
@@ -25,26 +29,26 @@ class TestDecode(unittest.TestCase):
             self.decode.DELAY = delay
             exp_log = []
             self.feed_log.log = []
-            for (ins_str, exp_ins) in self.test_strs:
-                self.decode.feed(ins_str)
+            for (act_ins, exp_ins) in self.test_strs:
+                self.decode.feed(act_ins)
                 self.decode.tick() # Fed ins_str becomes current state.
                 for _ in range(self.decode.DELAY):
                     # Check Instruction not output before DELAY ticks.
-                    self.assertTrue(instruction_list_equal(self.feed_log.log,
-                                                           exp_log))
+                    self.assertTrue(instruction_list_equal(self.feed_log.log, exp_log))
                     self.decode.tick()
                 exp_log.append(exp_ins)
-                self.assertTrue(instruction_list_equal(self.feed_log.log,
-                                                       exp_log))
+                if isinstance(exp_ins, ins.Blth):
+                    exp_log[-1].branch_info = act_ins['branch_info']
+                self.assertTrue(instruction_list_equal(self.feed_log.log, exp_log))
 
     def test_full(self):
         """Test IntegerUnit full method updates correctly after ticks."""
         for delay in [1, 2, 5, 10]:
             self.decode.DELAY = delay
-            for ins_str, _ in self.test_strs:
+            for ins, _ in self.test_strs:
                 self.assertFalse(self.decode.full(),
                                  'Decode should not be full after initialization')
-                self.decode.feed(ins_str)
+                self.decode.feed(ins)
                 self.assertTrue(self.decode.full(),
                                 'Decode should be full after being fed')
                 for _ in range(self.decode.DELAY - 1):
@@ -56,6 +60,8 @@ class TestDecode(unittest.TestCase):
                                  'Decode should not be full after DELAY ticks')
 
     def test_decode_str(self):
-        for ins_str, exp_ins in self.test_strs:
-            self.assertTrue(instruction_list_equal([decode._decode(ins_str)],
+        for act_ins, exp_ins in self.test_strs:
+            if isinstance(exp_ins, ins.Blth):
+                exp_ins.branch_info = act_ins['branch_info']
+            self.assertTrue(instruction_list_equal([decode._decode(act_ins)],
                                                    [exp_ins]))
