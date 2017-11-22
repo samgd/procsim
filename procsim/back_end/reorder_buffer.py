@@ -1,4 +1,5 @@
 from copy import copy
+import logging
 
 from procsim.back_end.instructions.conditional import Conditional
 from procsim.back_end.instructions import load as back_end_load
@@ -141,6 +142,8 @@ class ReorderBuffer(PipelineStage, Subscriber):
 
     def operate(self):
         """Commit, in-order, completed instructions."""
+        if self.flush_root is None:
+            logging.warning('ReorderBuffer flush_root is %r', None)
         n_commit = 0
         start_head_id = self.current_head_id
         while self.current_head_id is not None:
@@ -199,8 +202,10 @@ class ReorderBuffer(PipelineStage, Subscriber):
             # prediction.
             if entry.value.taken == result.value:
                 entry.value = None
-            else:
+            elif entry.value.taken:
                 entry.value = entry.value.not_taken_addr
+            else:
+                entry.value = entry.value.taken_addr
         entry.done = True
         entry.spec_exec = False
 
@@ -311,7 +316,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         operand_2 = self._translate_operand(front_end_ins.r2)
 
         return Conditional(queue_id,
-                           self.translate_fn_lookup[type(front_end_ins)],
+                           self.operation_lookup[type(front_end_ins)],
                            operand_1,
                            operand_2)
 
@@ -368,7 +373,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         self.current_head_id = (self.current_head_id + 1) % self.CAPACITY
 
     def _process_conditional_queue_entry(self, entry):
-        if entry.value == None:
+        if entry.value is None:
             # Correct prediction.
             # All instructions in queue up to next conditional are no longer
             # being speculatively executed - set their flags to False.
@@ -391,10 +396,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         else:
             # Incorrect prediction.
             self.flush_root.flush()
-            if not entry.taken:
-                self.register_file['pc'] = entry.taken_addr
-            else:
-                self.register_file['pc'] = entry.not_taken_addr
+            self.register_file['pc'] = entry.value
 
 class QueueEntry:
     """An entry in a ReorderBuffer's circular queue.
