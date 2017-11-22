@@ -81,7 +81,7 @@ class ReservationStation(PipelineStage, Subscriber):
         self.execution_units[execution_unit.capability()].add(execution_unit)
 
     def receive(self, result):
-        for instruction in self.current_buffer:
+        for instruction in self.future_buffer:
             instruction.receive(result)
 
     def flush(self):

@@ -45,8 +45,6 @@ class Fetch(Clocked):
     def _parse_conditional_branch_info(self, cond_branch, next_pc):
         """Return BranchInfo for a conditional branch instruction."""
         fields = cond_branch.split(' ')
-        if fields[0] != 'blth':
-            raise ValueError('instruction is not a conditional branch')
         return BranchInfo(False, int(fields[3]), next_pc)
 
     def trigger(self):

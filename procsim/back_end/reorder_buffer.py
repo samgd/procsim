@@ -1,5 +1,4 @@
 from copy import copy
-import logging
 
 from procsim.back_end.instructions.conditional import Conditional
 from procsim.back_end.instructions import load as back_end_load
@@ -142,8 +141,6 @@ class ReorderBuffer(PipelineStage, Subscriber):
 
     def operate(self):
         """Commit, in-order, completed instructions."""
-        if self.flush_root is None:
-            logging.warning('ReorderBuffer flush_root is %r', None)
         n_commit = 0
         start_head_id = self.current_head_id
         while self.current_head_id is not None:
@@ -206,8 +203,8 @@ class ReorderBuffer(PipelineStage, Subscriber):
                 entry.value = entry.value.not_taken_addr
             else:
                 entry.value = entry.value.taken_addr
+            entry.spec_exec = False
         entry.done = True
-        entry.spec_exec = False
 
     def set_pipeline_flush_root(self, root):
         self.flush_root = root

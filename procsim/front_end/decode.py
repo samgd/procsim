@@ -42,6 +42,8 @@ class Decode(PipelineStage):
             instruct = _decode(self.current_inst)
             if not self.reorder_buffer.full(instruct):
                 self.reorder_buffer.feed(instruct)
+                self.future_inst = None
+                self.future_timer = 0
 
     def trigger(self):
         """Advance the state of the Decode stage and init a new future state."""
@@ -49,12 +51,8 @@ class Decode(PipelineStage):
         self.current_inst = self.future_inst
         self.current_timer = self.future_timer
         # Initialize future state.
-        if self.current_inst is None or self.current_timer == 0:
-            self.future_inst = None
-            self.future_timer = 0
-        else:
-            self.future_inst = self.current_inst
-            self.future_timer = max(0, self.current_timer - 1)
+        self.future_inst = self.current_inst
+        self.future_timer = max(0, self.current_timer - 1)
 
     def flush(self):
         self.current_inst = None

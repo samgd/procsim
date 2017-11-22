@@ -45,12 +45,8 @@ class BranchUnit(ExecutionUnit):
         self.current_inst = self.future_inst
         self.current_timer = self.future_timer
         # Initialize future state.
-        if self.current_inst is None:
-            self.future_inst = None
-            self.future_timer = 0
-        else:
-            self.future_inst = self.current_inst
-            self.future_timer = max(0, self.current_timer - 1)
+        self.future_inst = self.current_inst
+        self.future_timer = max(0, self.current_timer - 1)
 
     def capability(self):
         return Branch

@@ -56,7 +56,7 @@ class TestDecode(unittest.TestCase):
                 self.decode.feed(ins)
                 self.assertTrue(self.decode.full(),
                                 'Decode should be full after being fed')
-                for _ in range(self.decode.DELAY - 1):
+                for _ in range(self.decode.DELAY):
                     self.decode.tick()
                     self.assertTrue(self.decode.full(),
                                     'Decode should be full before DELAY ticks')
