@@ -52,3 +52,6 @@ class Fetch(Clocked):
 
     def trigger(self):
         pass
+
+    def flush(self):
+        self.decode.flush()

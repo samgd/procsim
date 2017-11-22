@@ -9,6 +9,7 @@ from procsim.front_end.instructions import Sub
 from procsim.front_end.instructions import SubI
 from procsim.register_file import RegisterFile
 from test.feed_log import FeedLog
+from test.flushable_log import FlushableLog
 
 TEST_PROGRAM = [Add('r1', 'r2', 'r3'),
                 AddI('r2', 'r2', 5),
@@ -50,3 +51,12 @@ class TestFetch(unittest.TestCase):
                    'branch_info': BranchInfo(False, 10, 1)}
 
         self.assertDictEqual(self.feed_log.log[0], exp_ins)
+
+    def test_flush(self):
+        """Ensure flush flushes Fetch and Decode."""
+        log = FlushableLog()
+        self.feed_log.flush = log.flush
+
+        fetch = Fetch(self.reg_file, [], self.feed_log)
+        fetch.flush()
+        self.assertEqual(log.n_flush, 1, 'Fetch must flush Decode')
