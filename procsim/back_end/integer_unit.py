@@ -54,3 +54,9 @@ class IntegerUnit(ExecutionUnit):
 
     def capability(self):
         return IntegerLogical
+
+    def flush(self):
+        self.current_inst = None
+        self.current_timer = 0
+        self.future_inst = None
+        self.future_timer = 0

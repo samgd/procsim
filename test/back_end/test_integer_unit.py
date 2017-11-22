@@ -46,3 +46,13 @@ class TestIntegerUnit(unittest.TestCase):
     def test_capability(self):
         unit = IntegerUnit(self.bus_log)
         self.assertEqual(unit.capability(), IntegerLogical)
+
+    def test_flush(self):
+        """Ensure flush flushes the IntegerUnit."""
+        unit = IntegerUnit(self.bus_log)
+        unit.feed(IntegerLogical('ROB1', lambda o1, o2: o1 + o2, 11, 13))
+        self.assertTrue(unit.full(),
+                        'IntegerUnit should be full after being fed')
+        unit.flush()
+        self.assertFalse(unit.full(),
+                        'IntegerUnit should not be full after flush')
