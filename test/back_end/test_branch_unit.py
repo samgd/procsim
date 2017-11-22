@@ -47,19 +47,29 @@ class TestBranchUnit(unittest.TestCase):
         for ins in [cond, uncond]:
             unit = BranchUnit(self.bus_log)
             self.assertFalse(unit.full(),
-                             'IntegerUnit should not be full after initialization')
+                             'BranchUnit should not be full after initialization')
             unit.feed(ins)
             self.assertTrue(unit.full(),
-                            'IntegerUnit should be full after being fed')
+                            'BranchUnit should be full after being fed')
             unit.trigger()
             for _ in range(ins.DELAY - 1):
                 unit.tick()
                 self.assertTrue(unit.full(),
-                                'IntegerUnit should be full before DELAY ticks')
+                                'BranchUnit should be full before DELAY ticks')
             unit.tick()
             self.assertFalse(unit.full(),
-                             'IntegerUnit should not be full after DELAY ticks')
+                             'BranchUnit should not be full after DELAY ticks')
 
     def test_capability(self):
         unit = BranchUnit(self.bus_log)
         self.assertEqual(unit.capability(), Branch)
+
+    def test_flush(self):
+        """Ensure flush flushes the BranchUnit."""
+        unit = BranchUnit(self.bus_log)
+        unit.feed(Unconditional('ROB1', 1001))
+        self.assertTrue(unit.full(),
+                        'BranchUnit should be full after being fed')
+        unit.flush()
+        self.assertFalse(unit.full(),
+                        'BranchUnit should not be full after flush')
