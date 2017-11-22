@@ -122,3 +122,13 @@ class TestLoadStoreQueue(unittest.TestCase):
     def reset_memory(self):
         for i in range(len(self.memory)):
             self.memory[i] = i
+
+    def test_flush(self):
+        """Ensure flush flushes the LoadStoreQueue."""
+        for capacity in [1, 5, 25, 200]:
+            lsq = LoadStoreQueue(self.memory, self.bus, capacity)
+            for _ in range(capacity):
+                lsq.feed(self.generate_load(capacity))
+            lsq.flush()
+            self.assertFalse(lsq.full(),
+                            'LoadStoreQueue should not be full after flush')

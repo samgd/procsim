@@ -68,3 +68,7 @@ class LoadStoreQueue(PipelineStage, Subscriber):
     def receive(self, result):
         for instruction in self.current_queue:
             instruction.receive(result)
+
+    def flush(self):
+        self.current_queue = []
+        self.future_queue = []
