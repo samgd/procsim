@@ -83,3 +83,10 @@ class ReservationStation(PipelineStage, Subscriber):
     def receive(self, result):
         for instruction in self.current_buffer:
             instruction.receive(result)
+
+    def flush(self):
+        self.current_buffer = set()
+        self.future_buffer = set()
+        for units in self.execution_units.values():
+            for unit in units:
+                unit.flush()

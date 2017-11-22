@@ -6,6 +6,7 @@ from procsim.back_end.instructions.integer_logical import IntegerLogical
 from procsim.back_end.reservation_station import ReservationStation
 from procsim.back_end.result import Result
 from test.feed_log import FeedLog
+from test.flushable_log import FlushableLog
 
 class TestReservationStation(unittest.TestCase):
 
@@ -114,3 +115,20 @@ class TestReservationStation(unittest.TestCase):
         self.rs.receive(Result('ROB2', 50))
         self.rs.tick()
         self.assertListEqual(self.feed_log.log, [ins])
+
+    def test_flush(self):
+        """Ensure flush flushes the ReservationStation and all execution units."""
+        log = FlushableLog()
+        log.capability = lambda: Instruction
+
+        for capacity in [1, 5, 25, 200]:
+            rs = ReservationStation(capacity=capacity)
+            log.reset()
+            rs.register(log)
+            for _ in range(capacity):
+                rs.feed(self.generate_add())
+            rs.flush()
+            self.assertFalse(rs.full(),
+                            'ReservationStation should not be full after flush')
+            self.assertEqual(log.n_flush, 1,
+                             'ReservationStation must flush registered units once')
