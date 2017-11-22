@@ -60,3 +60,12 @@ class TestFetch(unittest.TestCase):
         fetch = Fetch(self.reg_file, [], self.feed_log)
         fetch.flush()
         self.assertEqual(log.n_flush, 1, 'Fetch must flush Decode')
+
+    def test_unconditional_branch_set_pc(self):
+        """Ensure Fetch detects unconditional branch and sets pc."""
+        self.reg_file['pc'] = 0
+        fetch = Fetch(self.reg_file, ['j 100'], self.feed_log)
+        fetch.tick()
+        fetch.tick()
+        self.assertEqual(self.reg_file['pc'], 100,
+                         'Fetch should detect unconditional branches and set pc')

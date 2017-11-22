@@ -27,15 +27,22 @@ class Fetch(Clocked):
         if not self.decode.full() and program_counter < len(self.program):
             ins = self.program[program_counter]
             food = {'instruction_str': ins}
-            try:
-                branch_info = self._parse_branch_info(ins, program_counter + 1)
+            # Branch detection and handling.
+            if ins[0] == 'j':
+                self.reg_file['pc'] = self._parse_unconditional_address(ins)
+                return
+            elif ins[:4] == 'blth':
+                branch_info = self._parse_conditional_branch_info(ins, program_counter + 1)
                 food['branch_info'] = branch_info
-            except:
-                pass
             self.decode.feed(food)
             self.reg_file['pc'] += 1
 
-    def _parse_branch_info(self, cond_branch, next_pc):
+    def _parse_unconditional_address(self, uncond_branch):
+        """Return target address of unconditional branch."""
+        fields = uncond_branch.split(' ')
+        return int(fields[1])
+
+    def _parse_conditional_branch_info(self, cond_branch, next_pc):
         """Return BranchInfo for a conditional branch instruction."""
         fields = cond_branch.split(' ')
         if fields[0] != 'blth':
