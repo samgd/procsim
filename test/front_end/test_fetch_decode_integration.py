@@ -22,6 +22,7 @@ class TestFetchDecodeIntegration(unittest.TestCase):
         self.test_program_str = [str(i) for i in TEST_PROGRAM]
 
         self.feed_log = FeedLog()
+        self.feed_log.full = lambda _: False
         self.decode = Decode(self.feed_log)
 
         self.reg_file = RegisterFile(10)
@@ -36,7 +37,7 @@ class TestFetchDecodeIntegration(unittest.TestCase):
             self.init_run()
 
             for _ in range(15):
-                if run == 'run_0':
+                if run == 0:
                     self.decode.operate()
                     self.fetch.operate()
                     self.decode.trigger()
