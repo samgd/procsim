@@ -172,6 +172,37 @@ class TestReorderBuffer(unittest.TestCase):
             self.assertEqual(self.rf['r1'], r1_value)
             r1_value += 1
 
+    def test_conditional_instructions_incorrect_prediction_no_commit(self):
+        """Test that Conditional Instructions with incorrect predicate do not commit."""
+        # Initialize units.
+        rs = FeedLog()
+        lsq = FeedLog()
+        rob = ReorderBuffer(self.rf, rs, lsq, capacity=32)
+        rob.WIDTH = 4
+        self.rf['r4'] = 0
+        self.rf['r5'] = 10
+
+        # Initialize instructions to be fed.
+        cond = Blth('r4', 'r5', 2)
+        cond.branch_info = BranchInfo(False, 2, 2)
+        cond.DELAY = 0
+        add = AddI('r1', 'r1', 1)
+        add.DELAY = 0
+
+        # Feed pairs of (cond, add) instructions.
+        n_pairs = 5
+        for i in range(n_pairs):
+            rob.feed(cond)
+            rob.feed(add)
+        rob.tick() # Insert into current queue.
+
+        # Receive result for each pair in turn.
+        for i in range(0, n_pairs, 2):
+            rob.receive(Result(rs.log[i].tag, False))
+            rob.receive(Result(rs.log[i + 1].tag, 0))
+            rob.tick()
+            self.assertEqual(self.rf['r1'], 0)
+
     def test_flush(self):
         """Ensure flush of ReorderBuffer, LoadStoreQueue and ReservationStation."""
         rs = FlushableLog()

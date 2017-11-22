@@ -28,6 +28,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         self.register_file = reg_file
         self.reservation_station = res_station
         self.load_store_queue = load_store_queue
+        self.flush_root = None
         # Superscalar width.
         self.WIDTH = 4
 
@@ -204,7 +205,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         entry.spec_exec = False
 
     def set_pipeline_flush_root(self, root):
-        pass
+        self.flush_root = root
 
     def flush(self):
         self.current_head_id = None
@@ -389,10 +390,11 @@ class ReorderBuffer(PipelineStage, Subscriber):
             self.current_head_id = (self.current_head_id + 1) % self.CAPACITY
         else:
             # Incorrect prediction.
-            #    - Flush the pipeline
-            #        - Call flush on fetch unit to propagate downwards
-            #    - Write new PC
-            pass
+            self.flush_root.flush()
+            if not entry.taken:
+                self.register_file['pc'] = entry.taken_addr
+            else:
+                self.register_file['pc'] = entry.not_taken_addr
 
 class QueueEntry:
     """An entry in a ReorderBuffer's circular queue.
