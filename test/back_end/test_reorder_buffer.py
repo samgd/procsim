@@ -6,7 +6,10 @@ from procsim.back_end.load_store_queue import LoadStoreQueue
 from procsim.back_end.reorder_buffer import ReorderBuffer
 from procsim.back_end.reservation_station import ReservationStation
 from procsim.back_end.result import Result
+from procsim.front_end.branch_info import BranchInfo
+from procsim.front_end.instructions.addi import AddI
 from procsim.front_end.instructions.add import Add
+from procsim.front_end.instructions.blth import Blth
 from procsim.memory import Memory
 from procsim.register_file import RegisterFile
 from test.back_end.bus_log import BusLog
@@ -134,3 +137,36 @@ class TestReorderBuffer(unittest.TestCase):
                         exp_rf[name] = result
                     self.assertEqual(exp_rf, act_rf)
                 rob.tick()
+
+    def test_conditional_instructions_correct_prediction_commit(self):
+        """Test Conditional Instructions with correct predicate commit OK."""
+        # Initialize units.
+        rs = FeedLog()
+        lsq = FeedLog()
+        rob = ReorderBuffer(self.rf, rs, lsq, capacity=32)
+        rob.WIDTH = 4
+        self.rf['r4'] = 0
+        self.rf['r5'] = 0
+
+        # Initialize instructions to be fed.
+        cond = Blth('r4', 'r5', 2)
+        cond.branch_info = BranchInfo(False, 2, 2)
+        cond.DELAY = 0
+        add = AddI('r1', 'r1', 1)
+        add.DELAY = 0
+
+        # Feed pairs of (cond, add) instructions.
+        n_pairs = 5
+        for i in range(n_pairs):
+            rob.feed(cond)
+            rob.feed(add)
+        rob.tick() # Insert into current queue.
+
+        # Receive result for each pair in turn.
+        r1_value = 0
+        for i in range(0, n_pairs, 2):
+            rob.receive(Result(rs.log[i].tag, False))
+            rob.receive(Result(rs.log[i + 1].tag, r1_value))
+            rob.tick()
+            self.assertEqual(self.rf['r1'], r1_value)
+            r1_value += 1

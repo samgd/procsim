@@ -16,13 +16,13 @@ class TestBranchUnit(unittest.TestCase):
         """Test correct Result computed by BranchUnit and published."""
         tests = []
 
-        cond = Conditional('ROB1', lambda o1, o2: o1 < o2, 5, 6, 100)
+        cond = Conditional('ROB1', lambda o1, o2: o1 < o2, 5, 6)
         cond.DELAY = 1
-        tests.append((cond, Result('ROB1', 100, typ=Branch)))
+        tests.append((cond, Result('ROB1', True, typ=Branch)))
 
-        cond = Conditional('ROB1', lambda o1, o2: o1 < o2, 6, 6, 100)
+        cond = Conditional('ROB1', lambda o1, o2: o1 < o2, 6, 6)
         cond.DELAY = 1
-        tests.append((cond, Result('ROB1', None, typ=Branch)))
+        tests.append((cond, Result('ROB1', False, typ=Branch)))
 
         uncond = Unconditional('ROB2', 10)
         uncond.DELAY = 1
@@ -38,7 +38,7 @@ class TestBranchUnit(unittest.TestCase):
 
     def test_full(self):
         """Test BranchUnit full method updates correctly after ticks."""
-        cond = Conditional('ROB1', lambda o1, o2: o1 < o2, 11, 13, 99)
+        cond = Conditional('ROB1', lambda o1, o2: o1 < o2, 11, 13)
         cond.DELAY = 5
 
         uncond = Unconditional('ROB1', 101)
