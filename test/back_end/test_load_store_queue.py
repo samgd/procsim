@@ -133,14 +133,25 @@ class TestLoadStoreQueue(unittest.TestCase):
             self.memory[i] = i
 
     def test_flush(self):
-        """Ensure flush flushes the LoadStoreQueue."""
-        for capacity in [1, 5, 25, 200]:
+        """Ensure flush flushes speculative Instructions from the LoadStoreQueue."""
+        for capacity in [5, 25, 200]:
             lsq = LoadStoreQueue(self.memory, self.bus, capacity)
-            for _ in range(capacity):
-                lsq.feed(self.generate_load(capacity))
+            # Fill to capacity.
+            for i in range(capacity):
+                ins = self.generate_load(capacity)
+                if i > capacity // 2:
+                    ins.spec_exec = True
+                lsq.feed(ins)
+            lsq.tick()
+            # Flush speculative instructions.
             lsq.flush()
             self.assertFalse(lsq.full(),
                             'LoadStoreQueue should not be full after flush')
+            # Refill to capacity.
+            for i in range((capacity - 1) // 2):
+                lsq.feed(self.generate_load(capacity))
+            self.assertTrue(lsq.full(),
+                            'LoadStoreQueue should be full after refill')
 
     def test_store_no_speculative_commit(self):
         """Ensure Stores do not commit before speculative execution off."""
