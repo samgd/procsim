@@ -11,11 +11,13 @@ class MemoryAccess(Instruction):
         value: Value to Store or Load to Memory.
     """
 
-    def __init__(self, tag, address):
+    def __init__(self, tag, address, uid=None, spec_exec=None):
         super().__init__()
         self.DELAY = 4
         self.tag = tag
         self.address = address
+        self.uid = uid
+        self.spec_exec = spec_exec
 
     def receive(self, result):
         if self.address == result.tag:

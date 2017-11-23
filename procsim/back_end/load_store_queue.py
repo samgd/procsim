@@ -26,7 +26,7 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         self.current_queue = []
         self.future_queue = []
 
-    def feed(self, instruction, spec_exec=False):
+    def feed(self, instruction):
         """Insert a MemoryAccess Instruction into the LoadStoreQueue.
 
         Args:
@@ -37,15 +37,15 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         assert isinstance(instruction, MemoryAccess),\
             'LoadStoreQueue fed non-MemoryAccess Instruction'
         self.future_queue.append(instruction)
-        self.spec_exec[instruction.tag] = spec_exec
+        self.spec_exec[instruction.uid] = instruction.spec_exec
 
-    def speculative_execution_off(self, tag):
-        """Turn off the spec. execution status of a MemoryAccess Instruction.
+    def speculative_execution_off(self, uid):
+        """Turn off the speculative execution status of an Instruction.
 
         Args:
-            tag: Tag of instruction whose status to change to not speculative.
+            uid: UID of Instruction whose status to change to not speculative.
         """
-        self.spec_exec[tag] = False
+        self.spec_exec[uid] = False
 
     def full(self):
         """Return True if the LoadStoreQueue is full.
@@ -59,8 +59,9 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         if len(self.current_queue) == 0:
             return
         head = self.current_queue[0]
-        #if self.spec_exec[head.tag] or not head.can_dispatch():
-        if self.spec_exec[head.tag] or not head.can_dispatch():
+        if self.spec_exec[head.uid]:
+            return
+        if not head.can_dispatch():
             return
         head.DELAY = max(0, head.DELAY - 1)
         if head.DELAY > 0:
@@ -68,7 +69,7 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         result = head.execute(self.memory)
         if result:
             self.broadcast_bus.publish(result)
-        del self.spec_exec[head.tag]
+        del self.spec_exec[head.uid]
         del self.current_queue[0]
         del self.future_queue[0]
 

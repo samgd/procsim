@@ -9,8 +9,8 @@ class Load(MemoryAccess):
         address: Address in Memory to Load a value from.
     """
 
-    def __init__(self, tag, address):
-        super().__init__(tag, address)
+    def __init__(self, tag, address, uid=None, spec_exec=None):
+        super().__init__(tag, address, uid, spec_exec)
 
     def receive(self, result):
         super().receive(result)

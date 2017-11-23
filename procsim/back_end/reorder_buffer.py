@@ -54,6 +54,10 @@ class ReorderBuffer(PipelineStage, Subscriber):
         # Speculative execution flag.
         self.spec_exec = False
 
+        # ROB needs to tell LSQ that an Instruction is no-longer speculative.
+        # UID used to link Instructions across units.
+        self.memory_uid = 0
+
     def _init_lookup_tables(self):
         self.translate_fn_lookup = {Add:   self._translate_arith_register,
                                     AddI:  self._translate_arith_imm,
@@ -96,10 +100,9 @@ class ReorderBuffer(PipelineStage, Subscriber):
         back_end_ins = translate(front_end_ins)
 
         # Add a QueueEntry to ROB queue.
-        if isinstance(front_end_ins, Store):
+        if isinstance(back_end_ins, back_end_store.Store):
             queue_entry = QueueEntry(dest=None,
                                      value=None,
-                                     typ=back_end_store.Store,
                                      done=True,
                                      spec_exec=self.spec_exec)
         elif isinstance(back_end_ins, Conditional):
@@ -116,6 +119,11 @@ class ReorderBuffer(PipelineStage, Subscriber):
                                      typ=None,
                                      done=False,
                                      spec_exec=self.spec_exec)
+
+        if isinstance(back_end_ins, (back_end_store.Store, back_end_load.Load)):
+            queue_entry.typ = type(back_end_ins)
+            queue_entry.uid = back_end_ins.uid
+
         self.future_queue[back_end_ins.tag] = queue_entry
 
         # Feed to stage further down pipeline.
@@ -123,7 +131,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         if typ == self.REGISTER:
             self.reservation_station.feed(back_end_ins)
         else:
-            self.load_store_queue.feed(back_end_ins, queue_entry.spec_exec)
+            self.load_store_queue.feed(back_end_ins)
 
     def full(self, front_end_ins):
         """Return True if the ReorderBuffer is full.
@@ -170,7 +178,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
 
             # Process head entry.
             if head.typ == back_end_store.Store:
-                self._process_store_entry()
+                self._process_store_entry(head)
             elif head.typ == Conditional:
                 self._process_conditional_queue_entry(head)
             else:
@@ -296,11 +304,22 @@ class ReorderBuffer(PipelineStage, Subscriber):
         if isinstance(front_end_ins, Load):
             self.register_alias_table[front_end_ins.rd] = queue_id
             address = self._translate_operand(front_end_ins.r1)
-            return back_end_load.Load(queue_id, address)
+            uid = self.memory_uid
+            self.memory_uid += 1
+            return back_end_load.Load(queue_id,
+                                      address,
+                                      uid,
+                                      self.spec_exec)
         elif isinstance(front_end_ins, Store):
             address = self._translate_operand(front_end_ins.r1)
             value = self._translate_operand(front_end_ins.rs)
-            return back_end_store.Store(queue_id, address, value)
+            uid = self.memory_uid
+            self.memory_uid += 1
+            return back_end_store.Store(queue_id,
+                                        address,
+                                        value,
+                                        uid,
+                                        self.spec_exec)
         raise ValueError('unknown MemoryAccess Instructions %r'
                          % type(front_end_ins).__name__)
 
@@ -360,7 +379,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
             return rob_id
         return self.register_file[register_name]
 
-    def _process_store_entry(self):
+    def _process_store_entry(self, entry):
         id = self.ID_PREFIX + str(self.current_head_id)
         del self.future_queue[id]
         # ROB ID now free.
@@ -403,8 +422,8 @@ class ReorderBuffer(PipelineStage, Subscriber):
             while id != self.current_head_id and id != self.future_tail_id:
                 entry = self.future_queue[self.ID_PREFIX + str(id)]
                 entry.spec_exec = False
-                if isinstance(entry, (back_end_load.Load, back_end_store.Store)):
-                    self.load_store_queue.speculative_execution_off(entry.tag)
+                if isinstance(entry, (back_end_store.Store, back_end_load.Load)):
+                    self.load_store_queue.speculative_execution_off(entry.uid)
                 if isinstance(entry, Conditional):
                     self.spec_exec = True
                     break
