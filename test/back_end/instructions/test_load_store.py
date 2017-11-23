@@ -22,7 +22,7 @@ class TestLoadStore(unittest.TestCase):
         self.assertTrue(ins.can_dispatch())
 
     def test_store_receive_and_can_dispatch_execute(self):
-        ins = Store('ROB7', 'ROB8')
+        ins = Store('ROB1', 'ROB7', 'ROB8')
         self.assertFalse(ins.can_dispatch())
 
         ins.receive(Result('ROB4', 0))
@@ -47,7 +47,7 @@ class TestLoadStore(unittest.TestCase):
     def test_store_execute(self):
         memory = Memory(64)
         memory[10] = 0
-        store = Store('ROB3', 'ROB4')
+        store = Store('ROB1', 'ROB3', 'ROB4')
         for result in [Result('ROB3', 10), Result('ROB4', 5)]:
             with self.assertRaises(ValueError):
                 store.execute(memory)

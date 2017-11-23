@@ -38,7 +38,7 @@ class TestLoadStoreQueue(unittest.TestCase):
     def test_instructions_receive_published_results(self):
         """Test Instructions receive published results OK."""
         load = Load('ROB1', 'ROB2')
-        store = Store('ROB4', 'ROB2')
+        store = Store('ROB3', 'ROB4', 'ROB2')
         lsq = LoadStoreQueue(self.memory, self.bus, 32)
         lsq.feed(load)
         lsq.feed(store)
@@ -70,7 +70,8 @@ class TestLoadStoreQueue(unittest.TestCase):
         for _ in range(50):
             for delay in [1, 5, 25, 200]:
                 self.bus.reset()
-                store = Store(random.randint(0, len(self.memory) - 1),
+                store = Store('tag',
+                              random.randint(0, len(self.memory) - 1),
                               random.randint(1, 10000))
                 store.DELAY = delay
                 lsq = LoadStoreQueue(self.memory, self.bus, 32)
@@ -86,8 +87,9 @@ class TestLoadStoreQueue(unittest.TestCase):
         lsq = LoadStoreQueue(self.memory, self.bus, capacity)
         # Fill LSQ with MemoryAccess Instructions.
         instructions = []
-        for _ in range(capacity):
+        for i in range(capacity):
             ins = self.generate_memory_access(capacity)
+            ins.tag = 'ROB%d' % i
             instructions.append(ins)
             lsq.feed(ins)
         lsq.tick()
@@ -117,6 +119,7 @@ class TestLoadStoreQueue(unittest.TestCase):
 
     def generate_store(self, capacity):
         return Store('ROB%d' % random.randint(0, capacity - 1),
+                     'ROB%d' % random.randint(0, capacity - 1),
                      'ROB%d' % random.randint(0, capacity - 1))
 
     def reset_memory(self):
@@ -132,3 +135,25 @@ class TestLoadStoreQueue(unittest.TestCase):
             lsq.flush()
             self.assertFalse(lsq.full(),
                             'LoadStoreQueue should not be full after flush')
+
+    def test_store_no_speculative_commit(self):
+        """Ensure Store do not commit before speculative execution false."""
+        lsq = LoadStoreQueue(self.memory, self.bus, 5)
+
+        address = 0
+        new_value = 100
+        ins = Store('ROB1', address, new_value)
+
+        self.memory[address] = new_value - 1
+
+        lsq.feed(ins, spec_exec=True)
+        lsq.tick()
+
+        for _ in range(ins.DELAY):
+            lsq.tick()
+            self.assertNotEqual(self.memory[address], new_value)
+
+        lsq.speculative_execution_off('ROB1')
+        for _ in range(ins.DELAY):
+            lsq.tick()
+        self.assertEqual(self.memory[address], new_value)

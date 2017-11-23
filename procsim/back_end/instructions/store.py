@@ -10,8 +10,8 @@ class Store(MemoryAccess):
         value: Value to Store to Memory.
     """
 
-    def __init__(self, address, value):
-        super().__init__('Store', address)
+    def __init__(self, tag, address, value):
+        super().__init__(tag, address)
         self.value = value
 
     def receive(self, result):
