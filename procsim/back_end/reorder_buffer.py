@@ -102,7 +102,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
                 dest = 'pc'
                 value = front_end_ins.branch_info
                 typ = Conditional
-                spec_exec = False
+                spec_exec = self.spec_exec
                 self.spec_exec = True
             else:
                 dest = front_end_ins.rd
@@ -380,16 +380,17 @@ class ReorderBuffer(PipelineStage, Subscriber):
             # All instructions in queue up to next conditional are no longer
             # being speculatively executed - set their flags to False.
             id = (self.current_head_id + 1) % self.CAPACITY
-            while id != self.future_tail_id:
-                entry = self.future_queue[self.ID_PREFIX + str(id)]
-                if isinstance(entry, Conditional):
-                    break
-                entry.spec_exec = False
-                id = (id + 1) % self.CAPACITY
             # ROB spec_exec flag determines spec_exec attribute of future queue
             # entries. Set to False unless another conditional instruction is
             # in queue.
-            self.spec_exec = id == self.future_tail_id
+            self.spec_exec = False
+            while id != self.current_head_id and id != self.future_tail_id:
+                entry = self.future_queue[self.ID_PREFIX + str(id)]
+                entry.spec_exec = False
+                if isinstance(entry, Conditional):
+                    self.spec_exec = True
+                    break
+                id = (id + 1) % self.CAPACITY
 
             # ROB ID now free.
             if self.future_tail_id is None:
