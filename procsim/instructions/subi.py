@@ -1,7 +1,7 @@
 from procsim.back_end.result import Result
-from procsim.instructions.instruction import Instruction
+from procsim.instructions.integer_logical import IntegerLogical
 
-class SubI(Instruction):
+class SubI(IntegerLogical):
     """Subtract immediate instruction.
 
     Args:
