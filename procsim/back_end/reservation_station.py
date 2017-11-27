@@ -15,14 +15,15 @@ class ReservationStation(PipelineStage, Subscriber):
             within the ReservationStation at any one time.)
     """
 
-    def __init__(self, capacity=32):
+    def __init__(self, capacity=32, width=4):
         super().__init__()
         self.execution_units = defaultdict(set)
         if capacity < 1:
             raise ValueError('capacity must be >= 1')
         self.CAPACITY = capacity
-        self.current_buffer = set()
-        self.future_buffer = set()
+        self.width = width
+        self.current_buffer = []
+        self.future_buffer = []
 
     def feed(self, instruction):
         """Insert an Instruction into the ReservationStation.
@@ -32,7 +33,7 @@ class ReservationStation(PipelineStage, Subscriber):
         """
         assert len(self.future_buffer) < self.CAPACITY,\
             'ReservationStation fed when full'
-        self.future_buffer.add(instruction)
+        self.future_buffer.append(instruction)
 
     def full(self):
         """Return True if the ReservationStation is full.
@@ -50,7 +51,11 @@ class ReservationStation(PipelineStage, Subscriber):
             AssertionError if no ExecutionUnits exist that are capable of
             executing the Instruction.
         """
-        for instruction in self.current_buffer:
+        n_dispatch = 0
+
+        for i, instruction in enumerate(self.current_buffer):
+            if n_dispatch == self.width:
+                break
             if not instruction.can_dispatch():
                 continue
             exist = False
@@ -62,7 +67,8 @@ class ReservationStation(PipelineStage, Subscriber):
                 if idle:
                     unit = next(iter(idle))
                     unit.feed(instruction)
-                    self.future_buffer.remove(instruction)
+                    del self.future_buffer[i - n_dispatch]
+                    n_dispatch += 1
                     break
             assert exist, 'Instruction %r has no ExecutionUnit' % instruction
 
@@ -85,8 +91,8 @@ class ReservationStation(PipelineStage, Subscriber):
             instruction.receive(result)
 
     def flush(self):
-        self.current_buffer = set()
-        self.future_buffer = set()
+        self.current_buffer = []
+        self.future_buffer = []
         for units in self.execution_units.values():
             for unit in units:
                 unit.flush()
