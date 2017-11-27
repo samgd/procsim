@@ -56,16 +56,16 @@ class Decode(PipelineStage):
         """Feed decoded instructions to the ReorderBuffer if possible."""
         if self.current_timer > 0:
             return
-        n_dispatch = 0
-        while n_dispatch < self.width:
-            if len(self.current_queue) == 0:
+        n_issue = 0
+        for instruct_str in self.current_queue:
+            if n_issue == self.width:
                 return
-            instruct = _decode(self.current_queue[0])
+            instruct = _decode(instruct_str)
             if self.reorder_buffer.full(instruct):
                 return
             self.reorder_buffer.feed(instruct)
-            n_dispatch += 1
-            del self.current_queue[0]
+            n_issue += 1
+
             del self.future_queue[0]
 
     def trigger(self):

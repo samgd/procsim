@@ -1,3 +1,4 @@
+import random
 import unittest
 
 from procsim.front_end.branch_info import BranchInfo
@@ -96,22 +97,23 @@ class TestDecode(unittest.TestCase):
         """Ensure up to width instructions are issued per cycle."""
         for capacity in [1, 5, 10, 200]:
             for width in [1, 4, 16]:
-                n_full = min(capacity, width)
 
-                for n_feed in range(1, n_full + 1):
-                    for delay in [1, 5, 10]:
-                        self.feed_log.reset()
-                        unit = decode.Decode(self.feed_log, capacity=capacity, width=width)
-                        unit.DELAY = delay
+                for delay in [1, 5, 10]:
+                    self.feed_log.reset()
+                    unit = decode.Decode(self.feed_log, capacity=capacity, width=width)
+                    unit.DELAY = delay
 
-                        exp_ins = []
-                        for i in range(n_feed):
-                            act, exp = self.test_strs[i % (len(self.test_strs) - 1)]
+                    exp_ins = []
+                    for i in range(random.randint(1, 100)):
+                        act, exp = self.test_strs[i % (len(self.test_strs) - 1)]
+                        if not unit.full():
                             unit.feed(act)
+                        if i < min(capacity, width):
                             exp_ins.append(exp)
 
-                        unit.tick() # Change to current queue.
-                        for _ in range(delay):
-                            unit.tick() # Issue all fed.
+                    unit.tick()
+                    # Issue all fed.
+                    for _ in range(delay):
+                        unit.tick()
 
-                        self.assertTrue(instruction_list_equal(self.feed_log.log, exp_ins))
+                    self.assertTrue(instruction_list_equal(self.feed_log.log, exp_ins))
