@@ -1,6 +1,7 @@
 from copy import deepcopy
 import unittest
 
+from procsim.branch.static.never_taken import NeverTaken
 from procsim.front_end.decode import Decode
 from procsim.front_end.fetch import Fetch
 from procsim.front_end.instructions import Add
@@ -28,7 +29,8 @@ class TestFetchDecodeIntegration(unittest.TestCase):
         self.reg_file = RegisterFile(10)
         self.fetch = Fetch(self.reg_file,
                            self.test_program_str,
-                           self.decode)
+                           self.decode,
+                           NeverTaken())
 
     def test_fetch_decode_integration(self):
         """Ensure different operate and trigger both produce the TEST_PROGRAM."""

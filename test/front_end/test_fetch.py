@@ -1,6 +1,7 @@
 import math
 import unittest
 
+from procsim.branch.static.never_taken import NeverTaken
 from procsim.front_end.branch_info import BranchInfo
 from procsim.front_end.fetch import Fetch
 from procsim.front_end.instructions import Add
@@ -22,6 +23,7 @@ class TestFetch(unittest.TestCase):
     def setUp(self):
         self.reg_file = RegisterFile(10)
         self.feed_log = FeedLog()
+        self.branch_predictor = NeverTaken()
 
     def test_operate(self):
         """Test Fetch feeds correct instruction strings."""
@@ -34,6 +36,7 @@ class TestFetch(unittest.TestCase):
             fetch = Fetch(self.reg_file,
                           test_program_str,
                           self.feed_log,
+                          self.branch_predictor,
                           width=width)
 
             n_inst = len(TEST_PROGRAM)
@@ -53,7 +56,10 @@ class TestFetch(unittest.TestCase):
         ins = Blth('r1', 'r2', 10)
         ins_str = str(ins)
 
-        fetch = Fetch(self.reg_file, [ins_str], self.feed_log)
+        fetch = Fetch(self.reg_file,
+                      [ins_str],
+                      self.feed_log,
+                      self.branch_predictor)
         fetch.tick()
 
         exp_ins = {'instruction_str': ins_str,
@@ -66,14 +72,20 @@ class TestFetch(unittest.TestCase):
         log = FlushableLog()
         self.feed_log.flush = log.flush
 
-        fetch = Fetch(self.reg_file, [], self.feed_log)
+        fetch = Fetch(self.reg_file,
+                      [],
+                      self.feed_log,
+                      self.branch_predictor)
         fetch.flush()
         self.assertEqual(log.n_flush, 1, 'Fetch must flush Decode')
 
     def test_unconditional_branch_set_pc(self):
         """Ensure Fetch detects unconditional branch and sets pc."""
         self.reg_file['pc'] = 0
-        fetch = Fetch(self.reg_file, ['j 100'], self.feed_log)
+        fetch = Fetch(self.reg_file,
+                      ['j 100'],
+                      self.feed_log,
+                      self.branch_predictor)
         fetch.tick()
         fetch.tick()
         self.assertEqual(self.reg_file['pc'], 100,

@@ -18,11 +18,12 @@ class Fetch(Clocked):
             (default 4)
     """
 
-    def __init__(self, register_file, program, decode, width=4):
+    def __init__(self, register_file, program, decode, branch_predictor, width=4):
         super().__init__()
         self.program = program
         self.reg_file = register_file
         self.decode = decode
+        self.branch_predictor = branch_predictor
         self.width = width
 
     def _fetch_next(self):
@@ -40,9 +41,11 @@ class Fetch(Clocked):
                 self.reg_file['pc'] = self._parse_unconditional_address(ins)
                 return None
             elif ins[:4] == 'blth':
+                self.reg_file['pc'] = self.branch_predictor.predict(program_counter)
                 branch_info = self._parse_conditional_branch_info(ins, program_counter + 1)
                 food['branch_info'] = branch_info
-            self.reg_file['pc'] += 1
+            else:
+                self.reg_file['pc'] += 1
             return food
 
     def operate(self):
