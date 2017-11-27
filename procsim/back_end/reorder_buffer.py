@@ -1,6 +1,7 @@
 from copy import copy
 
 from procsim.back_end.instructions.conditional import Conditional
+from procsim.back_end.instructions.branch import Branch
 from procsim.back_end.instructions import load as back_end_load
 from procsim.back_end.instructions import store as back_end_store
 from procsim.back_end.instructions.integer_logical import IntegerLogical
@@ -104,7 +105,16 @@ class ReorderBuffer(PipelineStage, Subscriber):
             queue_entry = QueueEntry(dest=None,
                                      value=None,
                                      done=True,
+                                     typ=back_end_store.Store,
                                      spec_exec=self.spec_exec)
+            queue_entry.uid = back_end_ins.uid
+        elif isinstance(back_end_ins, back_end_load.Load):
+            queue_entry = QueueEntry(dest=front_end_ins.rd,
+                                     value=None,
+                                     done=False,
+                                     typ=back_end_load.Load,
+                                     spec_exec=self.spec_exec)
+            queue_entry.uid = back_end_ins.uid
         elif isinstance(back_end_ins, Conditional):
             # Conditional instructions should come with BranchInfo.
             queue_entry = QueueEntry(dest='pc',
@@ -119,10 +129,6 @@ class ReorderBuffer(PipelineStage, Subscriber):
                                      typ=None,
                                      done=False,
                                      spec_exec=self.spec_exec)
-
-        if isinstance(back_end_ins, (back_end_store.Store, back_end_load.Load)):
-            queue_entry.typ = type(back_end_ins)
-            queue_entry.uid = back_end_ins.uid
 
         self.future_queue[back_end_ins.tag] = queue_entry
 
@@ -146,7 +152,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         Returns:
             True if the ReorderBuffer is unable to be fed the instruction.
         """
-        if len(self.future_queue) == self.CAPACITY:
+        if self.future_tail_id is None:
             return True
         typ = self.type_lookup[type(front_end_ins)]
         if typ == self.REGISTER:
@@ -213,10 +219,15 @@ class ReorderBuffer(PipelineStage, Subscriber):
             # For QueueEntry value for Conditional instructions None indicates
             # correct prediction and an address indicates an incorrect
             # prediction.
-            if entry.value.taken == result.value:
+            if entry.value.taken and result.value:
+                # Predicted taken, actually taken.
                 entry.value = None
-            elif entry.value.taken:
+            elif entry.value.taken and not result.value:
+                # Predicted taken, not took.
                 entry.value = entry.value.not_taken_addr
+            elif not entry.value.taken and not result.value:
+                # Predicted not taken, not took
+                entry.value = None
             else:
                 entry.value = entry.value.taken_addr
         entry.done = True
@@ -251,17 +262,17 @@ class ReorderBuffer(PipelineStage, Subscriber):
         Returns:
             IntegerLogical Instruction.
         """
-        queue_id = self._get_queue_id()
-
         operand_1 = self._translate_operand(front_end_ins.r1)
         operand_2 = self._translate_operand(front_end_ins.r2)
 
+        queue_id = self._get_queue_id()
         self.register_alias_table[front_end_ins.rd] = queue_id
 
-        return IntegerLogical(queue_id,
+        ins = IntegerLogical(queue_id,
                               self.operation_lookup[type(front_end_ins)],
                               operand_1,
                               operand_2)
+        return ins
 
     def _translate_arith_imm(self, front_end_ins):
         """Return a backend Instruction formed from a frontend instruction.
@@ -275,11 +286,10 @@ class ReorderBuffer(PipelineStage, Subscriber):
         Returns:
             IntegerLogical Instruction.
         """
-        queue_id = self._get_queue_id()
-
         operand_1 = self._translate_operand(front_end_ins.r1)
         operand_2 = front_end_ins.imm
 
+        queue_id = self._get_queue_id()
         self.register_alias_table[front_end_ins.rd] = queue_id
 
         return IntegerLogical(queue_id,
@@ -299,11 +309,11 @@ class ReorderBuffer(PipelineStage, Subscriber):
         Returns:
             MemoryAccess Instruction.
         """
-        queue_id = self._get_queue_id()
 
         if isinstance(front_end_ins, Load):
-            self.register_alias_table[front_end_ins.rd] = queue_id
             address = self._translate_operand(front_end_ins.r1)
+            queue_id = self._get_queue_id()
+            self.register_alias_table[front_end_ins.rd] = queue_id
             uid = self.memory_uid
             self.memory_uid += 1
             return back_end_load.Load(queue_id,
@@ -315,6 +325,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
             value = self._translate_operand(front_end_ins.rs)
             uid = self.memory_uid
             self.memory_uid += 1
+            queue_id = self._get_queue_id()
             return back_end_store.Store(queue_id,
                                         address,
                                         value,
@@ -335,9 +346,9 @@ class ReorderBuffer(PipelineStage, Subscriber):
         Returns:
             Conditional Instruction.
         """
-        queue_id = self._get_queue_id()
         operand_1 = self._translate_operand(front_end_ins.r1)
         operand_2 = self._translate_operand(front_end_ins.r2)
+        queue_id = self._get_queue_id()
 
         return Conditional(queue_id,
                            self.operation_lookup[type(front_end_ins)],
@@ -385,8 +396,9 @@ class ReorderBuffer(PipelineStage, Subscriber):
         # ROB ID now free.
         if self.future_tail_id is None:
             self.future_tail_id = self.current_head_id
-
         self.current_head_id = (self.current_head_id + 1) % self.CAPACITY
+        if self.current_head_id == self.current_tail_id:
+            self.current_head_id = None
 
     def _process_queue_entry(self, entry):
         # Write value to RegisterFile and remove from future queue.
@@ -394,6 +406,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
 
         id = self.ID_PREFIX + str(self.current_head_id)
 
+        del self.current_queue[id]
         del self.future_queue[id]
         # If RAT points to this ROB ID then we can remove the RAT entry as
         # the value is now in the RegisterFile.
@@ -406,8 +419,9 @@ class ReorderBuffer(PipelineStage, Subscriber):
         # ROB ID now free.
         if self.future_tail_id is None:
             self.future_tail_id = self.current_head_id
-
         self.current_head_id = (self.current_head_id + 1) % self.CAPACITY
+        if self.current_head_id == self.current_tail_id:
+            self.current_head_id = None
 
     def _process_conditional_queue_entry(self, entry):
         if entry.value is None:
@@ -419,20 +433,24 @@ class ReorderBuffer(PipelineStage, Subscriber):
             # entries. Set to False unless another conditional instruction is
             # in queue.
             self.spec_exec = False
-            while id != self.current_head_id and id != self.future_tail_id:
+            while id != self.current_head_id and id != self.current_tail_id:
                 entry = self.future_queue[self.ID_PREFIX + str(id)]
                 entry.spec_exec = False
-                if isinstance(entry, (back_end_store.Store, back_end_load.Load)):
+                if entry.typ == back_end_store.Store or entry.typ == back_end_load.Load:
                     self.load_store_queue.speculative_execution_off(entry.uid)
-                if isinstance(entry, Conditional):
+                if entry.typ == Conditional:
                     self.spec_exec = True
                     break
                 id = (id + 1) % self.CAPACITY
 
             # ROB ID now free.
+            del self.current_queue[self.ID_PREFIX + str(self.current_head_id)]
+            del self.future_queue[self.ID_PREFIX + str(self.current_head_id)]
             if self.future_tail_id is None:
                 self.future_tail_id = self.current_head_id
             self.current_head_id = (self.current_head_id + 1) % self.CAPACITY
+            if self.current_head_id == self.current_tail_id:
+                self.current_head_id = None
         else:
             # Incorrect prediction.
             self.flush_root.flush()
@@ -461,4 +479,8 @@ class QueueEntry:
         self.spec_exec = spec_exec
 
     def __repr__(self):
-        return 'QueueEntry(%r, %r, %r)' % (self.dest, self.value, self.done)
+        rep = 'QueueEntry(%r, %r, %r, %r, %r' % (self.dest, self.value, self.done, self.typ, self.spec_exec)
+        if hasattr(self, 'uid'):
+            rep += ', %r' % self.uid
+        rep += ')'
+        return rep

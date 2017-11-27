@@ -1,3 +1,5 @@
+import logging
+
 from procsim.register import Register
 
 class Memory:
@@ -25,6 +27,8 @@ class Memory:
 
     def __setitem__(self, address, value):
         """Set the value at the given Memory address."""
+        if not isinstance(value, int):
+            logging.warning('memory address %r set to non-int value %r' % (address, value))
         address = self._validate_address(address)
         self.memory[address] = value
 
