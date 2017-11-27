@@ -1,8 +1,8 @@
 import math
 import unittest
 
+from procsim.branch.branch_info import BranchInfo
 from procsim.branch.static.never_taken import NeverTaken
-from procsim.front_end.branch_info import BranchInfo
 from procsim.front_end.fetch import Fetch
 from procsim.front_end.instructions import Add
 from procsim.front_end.instructions import AddI

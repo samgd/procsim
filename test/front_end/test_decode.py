@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from procsim.front_end.branch_info import BranchInfo
+from procsim.branch.branch_info import BranchInfo
 from procsim.front_end import decode
 from test.feed_log import FeedLog
 from test.flushable_log import FlushableLog

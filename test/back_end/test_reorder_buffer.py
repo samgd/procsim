@@ -6,7 +6,7 @@ from procsim.back_end.load_store_queue import LoadStoreQueue
 from procsim.back_end.reorder_buffer import ReorderBuffer
 from procsim.back_end.reservation_station import ReservationStation
 from procsim.back_end.result import Result
-from procsim.front_end.branch_info import BranchInfo
+from procsim.branch.branch_info import BranchInfo
 from procsim.front_end.instructions.addi import AddI
 from procsim.front_end.instructions.add import Add
 from procsim.front_end.instructions.blth import Blth

@@ -1,5 +1,5 @@
 class BranchInfo:
-    """Information from the Fetch units about a conditional branch instruction.
+    """Information about a conditional branch instruction.
 
     Attributes:
         taken: Bool - True if conditional branch was taken by the Fetch unit.
@@ -23,4 +23,3 @@ class BranchInfo:
     def __eq__(self, other):
         return (isinstance(self, other.__class__)
                 and self.__dict__ == other.__dict__)
-

@@ -1,5 +1,5 @@
 from procsim.clocked import Clocked
-from procsim.front_end.branch_info import BranchInfo
+from procsim.branch.branch_info import BranchInfo
 
 class Fetch(Clocked):
     """Fetch instruction at address in program counter and feed to Decode stage.
@@ -41,8 +41,11 @@ class Fetch(Clocked):
                 self.reg_file['pc'] = self._parse_unconditional_address(ins)
                 return None
             elif ins[:4] == 'blth':
-                self.reg_file['pc'] = self.branch_predictor.predict(program_counter)
-                branch_info = self._parse_conditional_branch_info(ins, program_counter + 1)
+                branch_info = self.branch_predictor.predict(program_counter, ins)
+                if branch_info.taken:
+                    self.reg_file['pc'] = branch_info.taken_addr
+                else:
+                    self.reg_file['pc'] = branch_info.not_taken_addr
                 food['branch_info'] = branch_info
             else:
                 self.reg_file['pc'] += 1
@@ -60,11 +63,6 @@ class Fetch(Clocked):
         """Return target address of unconditional branch."""
         fields = uncond_branch.split(' ')
         return int(fields[1])
-
-    def _parse_conditional_branch_info(self, cond_branch, next_pc):
-        """Return BranchInfo for a conditional branch instruction."""
-        fields = cond_branch.split(' ')
-        return BranchInfo(False, int(fields[3]), next_pc)
 
     def trigger(self):
         pass
