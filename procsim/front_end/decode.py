@@ -1,24 +1,34 @@
+from copy import copy
+
 from procsim.pipeline_stage import PipelineStage
 import procsim.front_end.instructions as ins
 
 class Decode(PipelineStage):
-    """Decode decodes an Instruction string to an Instruction.
+    """Decode decodes an instruction string to an instruction.
 
     Args:
         reorder_buffer: ReorderBuffer to feed results to.
+        capacity: Size of the Decode unit's buffer. (default 4)
+        width: Maximum number of instructions to decode per cycle. Note that
+            fewer instructions may be decoded if the ReorderBuffer is full or
+            the Decode unit has no buffered instructions to decode. (default 4)
 
     Attributes:
-        DELAY: Number of clock cycles required to decode an Instruction.
+        DELAY: Number of clock cycles required to decode an instruction.
             (default 1)
     """
 
-    def __init__(self, reorder_buffer):
+    def __init__(self, reorder_buffer, capacity=4, width=4):
         super().__init__()
+        if capacity < 1:
+            raise ValueError('capacity must be >= 1')
         self.reorder_buffer = reorder_buffer
+        self.CAPACITY = capacity
+        self.width = width
         self.DELAY = 1
-        self.current_inst = None
+        self.current_queue = []
         self.current_timer = 0
-        self.future_inst = None
+        self.future_queue = []
         self.future_timer = 0
 
     def feed(self, instruction):
@@ -28,36 +38,49 @@ class Decode(PipelineStage):
             instruction: A dictionary containing at least the instruction_str
             key with value being a string to decode.
         """
-        assert self.future_inst is None, 'Decode fed when full'
-        self.future_inst = instruction
-        self.future_timer = max(0, self.DELAY - 1)
+        assert len(self.future_queue) < self.CAPACITY,\
+            'Decode fed when full'
+        if len(self.future_queue) == 0:
+            self.future_timer = max(0, self.DELAY - 1)
+        self.future_queue.append(instruction)
 
     def full(self):
-        """Return True if the Decode stages future state is non-empty."""
-        return self.future_inst is not None
+        """Return True if Decode is full.
+
+        Returns:
+            True if the Decode unit is unable to be fed.
+        """
+        return len(self.future_queue) == self.CAPACITY
 
     def operate(self):
-        """Feed decoded Instruction to the ReorderBuffer if possible."""
-        if self.current_inst and self.current_timer == 0:
-            instruct = _decode(self.current_inst)
-            if not self.reorder_buffer.full(instruct):
-                self.reorder_buffer.feed(instruct)
-                self.future_inst = None
-                self.future_timer = 0
+        """Feed decoded instructions to the ReorderBuffer if possible."""
+        if self.current_timer > 0:
+            return
+        n_dispatch = 0
+        while n_dispatch < self.width:
+            if len(self.current_queue) == 0:
+                return
+            instruct = _decode(self.current_queue[0])
+            if self.reorder_buffer.full(instruct):
+                return
+            self.reorder_buffer.feed(instruct)
+            n_dispatch += 1
+            del self.current_queue[0]
+            del self.future_queue[0]
 
     def trigger(self):
-        """Advance the state of the Decode stage and init a new future state."""
-        # Update current state.
-        self.current_inst = self.future_inst
+        """Free up buffer space by removing issued instructions."""
+        self.current_queue = self.future_queue
         self.current_timer = self.future_timer
-        # Initialize future state.
-        self.future_inst = self.current_inst
-        self.future_timer = max(0, self.current_timer - 1)
+
+        self.future_queue = copy(self.current_queue)
+        self.future_timer = max(0, self.future_timer - 1)
 
     def flush(self):
-        self.current_inst = None
+        self.current_queue = []
         self.current_timer = 0
-        self.future_inst = None
+
+        self.future_queue = []
         self.future_timer = 0
 
         self.reorder_buffer.flush()

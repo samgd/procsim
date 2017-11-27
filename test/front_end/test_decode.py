@@ -15,7 +15,6 @@ class TestDecode(unittest.TestCase):
         self.feed_log._full = self.feed_log.full
         self.feed_log.full = lambda x: self.feed_log._full()
 
-        self.decode = decode.Decode(self.feed_log)
         self.test_strs = [('add r1 r2 r3', ins.Add('r1', 'r2', 'r3')),
                           ('addi r1 r2 5', ins.AddI('r1', 'r2', 5)),
                           ('sub rd r0 r9', ins.Sub('rd', 'r0', 'r9')),
@@ -31,37 +30,44 @@ class TestDecode(unittest.TestCase):
     def test_correct_result(self):
         """Test correct Result computed and fed by Decode stage."""
         for delay in [1, 2, 5, 10]:
-            self.decode.DELAY = delay
+            self.feed_log.reset()
+            unit = decode.Decode(self.feed_log)
+            unit.DELAY = delay
             exp_log = []
             self.feed_log.log = []
             for (act_ins, exp_ins) in self.test_strs:
-                self.decode.feed(act_ins)
-                self.decode.tick() # Fed ins_str becomes current state.
-                for _ in range(self.decode.DELAY):
+                unit.feed(act_ins)
+                unit.tick() # Fed ins_str becomes current state.
+                for _ in range(unit.DELAY):
                     # Check Instruction not output before DELAY ticks.
                     self.assertTrue(instruction_list_equal(self.feed_log.log, exp_log))
-                    self.decode.tick()
+                    unit.tick()
                 exp_log.append(exp_ins)
                 if isinstance(exp_ins, ins.Blth):
                     exp_log[-1].branch_info = act_ins['branch_info']
                 self.assertTrue(instruction_list_equal(self.feed_log.log, exp_log))
 
     def test_full(self):
-        """Test IntegerUnit full method updates correctly after ticks."""
-        for delay in [1, 2, 5, 10]:
-            self.decode.DELAY = delay
-            for ins, _ in self.test_strs:
-                self.assertFalse(self.decode.full(),
+        """Test Decode full method updates correctly after ticks."""
+        test_ins = self.test_strs[0][0]
+
+        for capacity in [1, 5, 10]:
+            for delay in [1, 2, 5, 10]:
+                unit = decode.Decode(self.feed_log, capacity=capacity)
+                unit.DELAY = delay
+
+                self.assertFalse(unit.full(),
                                  'Decode should not be full after initialization')
-                self.decode.feed(ins)
-                self.assertTrue(self.decode.full(),
+                for _ in range(capacity):
+                    unit.feed(test_ins)
+                self.assertTrue(unit.full(),
                                 'Decode should be full after being fed')
-                for _ in range(self.decode.DELAY):
-                    self.decode.tick()
-                    self.assertTrue(self.decode.full(),
-                                    'Decode should be full before DELAY ticks')
-                self.decode.tick()
-                self.assertFalse(self.decode.full(),
+                for i in range(unit.DELAY):
+                    unit.tick()
+                    self.assertTrue(unit.full(),
+                                    'Decode should be full before DELAY ticks %r %r')
+                unit.tick()
+                self.assertFalse(unit.full(),
                                  'Decode should not be full after DELAY ticks')
 
     def test_decode_str(self):
@@ -76,10 +82,36 @@ class TestDecode(unittest.TestCase):
         log = FlushableLog()
         self.feed_log.flush = log.flush
 
-        self.decode.feed(self.test_strs[0])
-        self.assertTrue(self.decode.full(),
+        unit = decode.Decode(self.feed_log, capacity=1)
+
+        unit.feed(self.test_strs[0][0])
+        self.assertTrue(unit.full(),
                         'Decode should be full after being fed')
-        self.decode.flush()
-        self.assertFalse(self.decode.full(),
+        unit.flush()
+        self.assertFalse(unit.full(),
                          'Decode should not be full after flush')
         self.assertEqual(log.n_flush, 1, 'Decode must flush ReorderBuffer')
+
+    def test_superscalar(self):
+        """Ensure up to width instructions are issued per cycle."""
+        for capacity in [1, 5, 10, 200]:
+            for width in [1, 4, 16]:
+                n_full = min(capacity, width)
+
+                for n_feed in range(1, n_full + 1):
+                    for delay in [1, 5, 10]:
+                        self.feed_log.reset()
+                        unit = decode.Decode(self.feed_log, capacity=capacity, width=width)
+                        unit.DELAY = delay
+
+                        exp_ins = []
+                        for i in range(n_feed):
+                            act, exp = self.test_strs[i % (len(self.test_strs) - 1)]
+                            unit.feed(act)
+                            exp_ins.append(exp)
+
+                        unit.tick() # Change to current queue.
+                        for _ in range(delay):
+                            unit.tick() # Issue all fed.
+
+                        self.assertTrue(instruction_list_equal(self.feed_log.log, exp_ins))
