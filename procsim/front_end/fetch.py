@@ -13,16 +13,24 @@ class Fetch(Clocked):
         register_file: RegisterFile to read program counter value from.
         program: List of string Instructions.
         decode: Decode unit to feed Fetched Instruction strings to.
+        width: Maximum number of instructions to fetch and per cycle. Note that
+            fewer instructions may be fetched if the Decode unit is full.
+            (default 4)
     """
 
-    def __init__(self, register_file, program, decode):
+    def __init__(self, register_file, program, decode, width=4):
         super().__init__()
         self.program = program
         self.reg_file = register_file
         self.decode = decode
+        self.width = width
 
-    def operate(self):
-        """Fetch next Instruction string, inc pc, and feed Decode if not full."""
+    def _fetch_next(self):
+        """Return next Instruction string and increment pc if possible.
+
+        Returns: Dictionary containing an instruction_str key or None if no
+            instruction can be fetched.
+        """
         program_counter = self.reg_file['pc']
         if not self.decode.full() and program_counter < len(self.program):
             ins = self.program[program_counter]
@@ -30,12 +38,20 @@ class Fetch(Clocked):
             # Branch detection and handling.
             if ins[0] == 'j':
                 self.reg_file['pc'] = self._parse_unconditional_address(ins)
-                return
+                return None
             elif ins[:4] == 'blth':
                 branch_info = self._parse_conditional_branch_info(ins, program_counter + 1)
                 food['branch_info'] = branch_info
-            self.decode.feed(food)
             self.reg_file['pc'] += 1
+            return food
+
+    def operate(self):
+        """Feed Decode unit with up to width instructions."""
+        for _ in range(self.width):
+            food = self._fetch_next()
+            if food is None:
+                return
+            self.decode.feed(food)
 
     def _parse_unconditional_address(self, uncond_branch):
         """Return target address of unconditional branch."""

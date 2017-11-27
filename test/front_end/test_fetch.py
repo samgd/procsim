@@ -1,3 +1,4 @@
+import math
 import unittest
 
 from procsim.front_end.branch_info import BranchInfo
@@ -26,19 +27,27 @@ class TestFetch(unittest.TestCase):
         """Test Fetch feeds correct instruction strings."""
         test_program_str = [str(i) for i in TEST_PROGRAM]
 
-        fetch = Fetch(self.reg_file,
-                      test_program_str,
-                      self.feed_log)
+        for width in [1, 2, 3]:
+            self.feed_log.reset()
+            self.reg_file['pc'] = 0
 
-        for i in range(1, len(TEST_PROGRAM) + 1):
+            fetch = Fetch(self.reg_file,
+                          test_program_str,
+                          self.feed_log,
+                          width=width)
+
+            n_inst = len(TEST_PROGRAM)
+            n_fetch = 0
+            while n_fetch <= n_inst:
+                fetch.tick()
+                n_fetch += width
+                self.assertListEqual(self.feed_log.log,
+                                     [{'instruction_str': ins_str}
+                                      for ins_str in test_program_str[:n_fetch]])
+                self.assertEqual(self.reg_file['pc'], min(n_fetch, n_inst))
+            # PC is now beyond # program instructions. Tick ensures Fetch handles
+            # this gracefully.
             fetch.tick()
-            self.assertListEqual(self.feed_log.log,
-                                 [{'instruction_str': ins_str}
-                                  for ins_str in test_program_str[:i]])
-            self.assertEqual(self.reg_file['pc'], i)
-        # PC is now beyond # program instructions. Tick ensures Fetch handles
-        # this gracefully.
-        fetch.tick()
 
     def test_conditional_branch_tag(self):
         ins = Blth('r1', 'r2', 10)
