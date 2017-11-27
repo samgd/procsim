@@ -19,19 +19,21 @@ class ReorderBuffer(PipelineStage, Subscriber):
             to.
         capacity: Size of the buffer.  (Max Instructions that can be contained
             within the ReorderBuffer at any one time.)
+        width: Maximum number of instructions to commit per cycle. Note that
+            fewer instructions may be committed if the ReorderBuffer has no
+            instructions in it's queue. (default 4)
     """
 
     REGISTER = 0
     MEMORY = 1
 
-    def __init__(self, reg_file, res_station, load_store_queue, capacity=32):
+    def __init__(self, reg_file, res_station, load_store_queue, capacity=32, width=4):
         super().__init__()
         self.register_file = reg_file
         self.reservation_station = res_station
         self.load_store_queue = load_store_queue
         self.flush_root = None
-        # Superscalar width.
-        self.WIDTH = 4
+        self.width = width
 
         # Circular queue setup.
         if capacity < 1:
@@ -172,7 +174,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
                 # Looped back to start - committed all possible instructions.
                 self.current_head_id = None
                 break
-            if n_commit == self.WIDTH:
+            if n_commit == self.width:
                 # Unable to commit any more this cycle.
                 break
 

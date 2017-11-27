@@ -76,7 +76,7 @@ class TestReorderBuffer(unittest.TestCase):
         """Test that commit frees a slot in the ROB."""
         for capacity in [1, 5, 25, 200]:
             log = FeedLog()
-            rob = ReorderBuffer(self.rf, log, self.lsq, capacity=capacity)
+            rob = ReorderBuffer(self.rf, log, self.lsq, capacity=capacity, width=4)
             # Half fill.
             for _ in range(capacity // 2):
                 rob.feed(self.generate_add(self.n_gpr_registers))
@@ -85,7 +85,7 @@ class TestReorderBuffer(unittest.TestCase):
             self.assertEqual(capacity // 2, len(log.log))
             for ins in log.log:
                 rob.receive(Result(ins.tag, 5))
-            for _ in range(math.ceil(capacity / rob.WIDTH)):
+            for _ in range(math.ceil(capacity / rob.width)):
                 rob.tick()
             # Should now be able to feed capacity instructions.
             for _ in range(capacity):
@@ -100,8 +100,8 @@ class TestReorderBuffer(unittest.TestCase):
                 zeros = {'r%d' % i: 0 for i in range(capacity)}
                 act_rf = RegisterFile(capacity, init_values=zeros)
                 exp_rf = RegisterFile(capacity, init_values=zeros)
-                rob = ReorderBuffer(act_rf, self.log, self.lsq, capacity)
-                rob.WIDTH = random.randint(1, 2*capacity)
+                width = random.randint(1, 2*capacity)
+                rob = ReorderBuffer(act_rf, self.log, self.lsq, capacity, width)
 
                 # Feed instructions into ROB.
                 n_ins = random.randint(1, capacity)
@@ -128,8 +128,8 @@ class TestReorderBuffer(unittest.TestCase):
 
                 # Group updates into ROB width chunks.
                 updates = list(zip(register_names, result_vals))
-                group_updates = [updates[i:i + rob.WIDTH]
-                                 for i in range(0, len(updates), rob.WIDTH)]
+                group_updates = [updates[i:i + rob.width]
+                                 for i in range(0, len(updates), rob.width)]
 
                 # Ensure in-order commit of width instructions per tick.
                 for group in group_updates:
