@@ -10,6 +10,11 @@ class Predictor(abc.ABC):
         """Return BranchInfo about the branch."""
         pass
 
+    @abc.abstractmethod
+    def receive(self, addr, taken):
+        """Receive information whether the branch at addr was taken or not."""
+        pass
+
     def _parse_conditional(self, instruction_str):
         """Return a Blth instruction."""
         fields = instruction_str.split(' ')

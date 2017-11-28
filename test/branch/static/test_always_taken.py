@@ -15,4 +15,4 @@ class TestAlwaysTaken(unittest.TestCase):
             imm = random.randint(1, 1000)
             blth = Blth('r1', 'r2', imm)
             self.assertEqual(predictor.predict(pc, str(blth)),
-                             BranchInfo(True, imm, pc + 1))
+                             BranchInfo(True, imm, pc + 1, pc))

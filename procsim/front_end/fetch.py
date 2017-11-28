@@ -13,6 +13,8 @@ class Fetch(Clocked):
         register_file: RegisterFile to read program counter value from.
         program: List of string Instructions.
         decode: Decode unit to feed Fetched Instruction strings to.
+        branch_predictor: Branch Predictor determines whether to speculative
+            take a branch or not.
         width: Maximum number of instructions to fetch and per cycle. Note that
             fewer instructions may be fetched if the Decode unit is full.
             (default 4)

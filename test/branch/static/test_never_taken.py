@@ -15,4 +15,4 @@ class TestNeverTaken(unittest.TestCase):
             imm = random.randint(1, 1000)
             blth = Blth('r1', 'r2', imm)
             self.assertEqual(predictor.predict(pc, str(blth)),
-                             BranchInfo(False, imm, pc + 1))
+                             BranchInfo(False, imm, pc + 1, pc))

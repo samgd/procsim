@@ -63,7 +63,7 @@ class TestFetch(unittest.TestCase):
         fetch.tick()
 
         exp_ins = {'instruction_str': ins_str,
-                   'branch_info': BranchInfo(False, 10, 1)}
+                   'branch_info': BranchInfo(False, 10, 1, 0)}
 
         self.assertDictEqual(self.feed_log.log[0], exp_ins)
 

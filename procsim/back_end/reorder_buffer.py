@@ -17,6 +17,8 @@ class ReorderBuffer(PipelineStage, Subscriber):
         res_station: ReservationStation to feed backend Instructions to.
         load_store_queue: LoadStoreQueue to dispatch MemoryAccess Instructions
             to.
+        branch_predictor: Branch Predictor to update with the actual outcome of
+            branch instructions. (default None)
         capacity: Size of the buffer.  (Max Instructions that can be contained
             within the ReorderBuffer at any one time.)
         width: Maximum number of instructions to commit per cycle. Note that
@@ -27,11 +29,12 @@ class ReorderBuffer(PipelineStage, Subscriber):
     REGISTER = 0
     MEMORY = 1
 
-    def __init__(self, reg_file, res_station, load_store_queue, capacity=32, width=4):
+    def __init__(self, reg_file, res_station, load_store_queue, branch_predictor=None, capacity=32, width=4):
         super().__init__()
         self.register_file = reg_file
         self.reservation_station = res_station
         self.load_store_queue = load_store_queue
+        self.branch_predictor = branch_predictor
         self.flush_root = None
         self.width = width
 
@@ -218,20 +221,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         if entry.typ != Conditional:
             entry.value = result.value
         else:
-            # For QueueEntry value for Conditional instructions None indicates
-            # correct prediction and an address indicates an incorrect
-            # prediction.
-            if entry.value.taken and result.value:
-                # Predicted taken, actually taken.
-                entry.value = None
-            elif entry.value.taken and not result.value:
-                # Predicted taken, not took.
-                entry.value = entry.value.not_taken_addr
-            elif not entry.value.taken and not result.value:
-                # Predicted not taken, not took
-                entry.value = None
-            else:
-                entry.value = entry.value.taken_addr
+            entry.value.actually_taken = result.value
         entry.done = True
 
     def set_pipeline_flush_root(self, root):
@@ -426,7 +416,12 @@ class ReorderBuffer(PipelineStage, Subscriber):
             self.current_head_id = None
 
     def _process_conditional_queue_entry(self, entry):
-        if entry.value is None:
+        if self.branch_predictor is not None:
+            # Update branch Predictor.
+            self.branch_predictor.receive(entry.value.addr,
+                                          entry.value.actually_taken)
+        if ((entry.value.taken and entry.value.actually_taken)
+            or (not entry.value.taken and not entry.value.actually_taken)):
             # Correct prediction.
             # All instructions in queue up to next conditional are no longer
             # being speculatively executed - set their flags to False.
@@ -456,7 +451,10 @@ class ReorderBuffer(PipelineStage, Subscriber):
         else:
             # Incorrect prediction.
             self.flush_root.flush()
-            self.register_file['pc'] = entry.value
+            if entry.value.taken and not entry.value.actually_taken:
+                self.register_file['pc'] = entry.value.not_taken_addr
+            else:
+                self.register_file['pc'] = entry.value.taken_addr
 
 class QueueEntry:
     """An entry in a ReorderBuffer's circular queue.

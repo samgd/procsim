@@ -83,5 +83,6 @@ class LoadStoreQueue(PipelineStage, Subscriber):
             instruction.receive(result)
 
     def flush(self):
-        self.current_queue = [ins for ins in self.current_queue if not ins.spec_exec]
-        self.future_queue = [ins for ins in self.future_queue if not ins.spec_exec]
+        self.current_queue = [ins for ins in self.current_queue if not self.spec_exec[ins.uid]]
+        self.future_queue = [ins for ins in self.future_queue if not self.spec_exec[ins.uid]]
+        self.spec_exec = {ins.uid: False for ins in self.future_queue}

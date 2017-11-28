@@ -101,7 +101,11 @@ class TestReorderBuffer(unittest.TestCase):
                 act_rf = RegisterFile(capacity, init_values=zeros)
                 exp_rf = RegisterFile(capacity, init_values=zeros)
                 width = random.randint(1, 2*capacity)
-                rob = ReorderBuffer(act_rf, self.log, self.lsq, capacity, width)
+                rob = ReorderBuffer(act_rf,
+                                    self.log,
+                                    self.lsq,
+                                    capacity=capacity,
+                                    width=width)
 
                 # Feed instructions into ROB.
                 n_ins = random.randint(1, capacity)
@@ -151,7 +155,7 @@ class TestReorderBuffer(unittest.TestCase):
 
         # Initialize instructions to be fed.
         cond = Blth('r4', 'r5', 2)
-        cond.branch_info = BranchInfo(False, 2, 2)
+        cond.branch_info = BranchInfo(False, 2, 2, None)
         cond.DELAY = 0
         add = AddI('r1', 'r1', 1)
         add.DELAY = 0
@@ -186,7 +190,7 @@ class TestReorderBuffer(unittest.TestCase):
 
         # Initialize instructions to be fed.
         cond = Blth('r4', 'r5', 100)
-        cond.branch_info = BranchInfo(False, 100, 1)
+        cond.branch_info = BranchInfo(False, 100, 1, None)
         cond.DELAY = 0
         add = AddI('r1', 'r1', 1)
         add.DELAY = 0

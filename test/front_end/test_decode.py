@@ -26,7 +26,7 @@ class TestDecode(unittest.TestCase):
                           ('blth r1 r2 10', ins.Blth('r1', 'r2', 10))]
         self.test_strs = [({'instruction_str': ins_str}, exp_ins)
                           for (ins_str, exp_ins) in self.test_strs]
-        self.test_strs[7][0]['branch_info'] = BranchInfo(False, 10, 9)
+        self.test_strs[7][0]['branch_info'] = BranchInfo(False, 10, 9, 8)
 
     def test_correct_result(self):
         """Test correct Result computed and fed by Decode stage."""

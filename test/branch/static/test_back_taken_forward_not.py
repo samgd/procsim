@@ -15,4 +15,4 @@ class TestBackTakenForwardNot(unittest.TestCase):
             imm = random.randint(1, 1000)
             blth = Blth('r1', 'r2', imm)
             self.assertEqual(predictor.predict(pc, str(blth)),
-                             BranchInfo(imm < pc, imm, pc + 1))
+                             BranchInfo(imm < pc, imm, pc + 1, pc))
