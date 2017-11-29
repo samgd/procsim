@@ -3,6 +3,7 @@ from copy import copy
 from procsim.back_end.instructions.load import Load
 from procsim.back_end.instructions.memory_access import MemoryAccess
 from procsim.back_end.instructions.store import Store
+from procsim.back_end.result import Result
 from procsim.back_end.subscriber import Subscriber
 from procsim.pipeline_stage import PipelineStage
 
@@ -10,12 +11,14 @@ class LoadStoreQueue(PipelineStage, Subscriber):
     """In-order LoadStoreQueue.
 
     Args:
+        memory: Memory instructions should execute on.
         broadcast_bus: BroadcastBus to publish Results to.
         capacity: Size of the queue. (Max MemoryAccess Instructions that can be
             contained within the LoadStoreQueue at any one time.)
+        data_forwarding: If True, Stores forward results to later Loads.
     """
 
-    def __init__(self, memory, broadcast_bus, capacity=32):
+    def __init__(self, memory, broadcast_bus, capacity=32, data_forwarding=True):
         super().__init__()
         if capacity < 1:
             raise ValueError('capacity must be >= 1')
@@ -25,6 +28,7 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         self.spec_exec = {}
         self.current_queue = []
         self.future_queue = []
+        self.data_forwarding = data_forwarding
 
     def feed(self, instruction):
         """Insert a MemoryAccess Instruction into the LoadStoreQueue.
@@ -64,7 +68,7 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         if not head.can_dispatch():
             return
         head.DELAY = max(0, head.DELAY - 1)
-        if head.DELAY > 0:
+        if head.DELAY > 0 and not hasattr(head, 'forwarded'):
             return
         result = head.execute(self.memory)
         if result:
@@ -72,6 +76,18 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         del self.spec_exec[head.uid]
         del self.current_queue[0]
         del self.future_queue[0]
+        if self.data_forwarding:
+            self._data_forward(head)
+
+    def _data_forward(self, ins):
+        """Forward Store value to Load instructions."""
+        if not isinstance(ins, Store):
+            return
+        for queue_ins in self.current_queue:
+            if queue_ins.address == ins.address:
+                if isinstance(queue_ins, Store):
+                    break
+                queue_ins.forwarded = True
 
     def trigger(self):
         """Free up queue space by removing the executed Instructions."""
