@@ -28,6 +28,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
             instructions in it's queue. (default 4)
 
     Attributes:
+        n_issued: Number of instructions issued.
         n_committed: Number of instructions committed.
         n_branch_correct: Number of correctly predicted branch instructions.
         n_branch_incorrect: Number of incorrectly predicted branch
@@ -45,6 +46,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         self.branch_predictor = branch_predictor
         self.flush_root = None
         self.width = width
+        self.n_issued = 0
         self.n_committed = 0
         self.n_branch_correct = 0
         self.n_branch_incorrect = 0
@@ -113,6 +115,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
             front_end_ins: Frontend instruction to insert.
         """
         assert not self.full(front_end_ins), 'ReorderBuffer fed when full'
+        self.n_issued += 1
 
         # Translate to back_end Instruction.
         translate = self.translate_fn_lookup[type(front_end_ins)]

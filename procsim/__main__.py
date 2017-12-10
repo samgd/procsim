@@ -125,7 +125,8 @@ try:
 except EndOfProgram:
     print('end:\t' + program.console_output())
     rob = reorder_buffer
-    print('Instructions Executed: %d' % rob.n_committed)
+    print('Instructions Issued: %d' % rob.n_issued)
+    print('Instructions Committed: %d' % rob.n_committed)
     print('Cycles: %d' % clock.n_ticks)
     print('Instructions/Cycle: %.2f' % (rob.n_committed / clock.n_ticks))
     accuracy = max(1, rob.n_branch_correct) / max(1, (rob.n_branch_correct + rob.n_branch_incorrect))
