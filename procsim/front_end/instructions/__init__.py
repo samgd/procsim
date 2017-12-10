@@ -8,3 +8,4 @@ from procsim.front_end.instructions.load import Load
 from procsim.front_end.instructions.store import Store
 from procsim.front_end.instructions.jump import Jump
 from procsim.front_end.instructions.blth import Blth
+from procsim.front_end.instructions.halt import Halt

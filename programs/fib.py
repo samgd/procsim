@@ -1,15 +1,16 @@
-from procsim.memory import Memory
 from procsim.register_file import RegisterFile
 
-MEMORY = Memory(1)
+MEMORY = None
 
-REGISTER_FILE = RegisterFile(6)
+REGISTER_FILE = RegisterFile(6, init_values={'r5': 1836311903})
 
-PROGRAM = ['addi r4 r4 0',
-           'addi r0 r0 1',
+def console_output():
+    return 'pc: %2d r0: %10d' % (REGISTER_FILE['pc'], REGISTER_FILE['r0'])
+
+PROGRAM = ['addi r0 r0 1',
            'addi r1 r1 1',
-           'str r0 r4',
            'add r2 r0 r1',
            'addi r0 r1 0',
            'addi r1 r2 0',
-           'j 3']
+           'blth r0 r5 2',
+           'halt']

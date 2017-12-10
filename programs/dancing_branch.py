@@ -5,7 +5,13 @@ from procsim.memory import Memory
 
 MEMORY = None
 
-REGISTER_FILE = RegisterFile(4, init_values={'r0': 20, 'r1': 0, 'r2': 2, 'r3': 3})
+REGISTER_FILE = RegisterFile(4, init_values={'r0': 500,
+                                             'r1': 0,
+                                             'r2': 2,
+                                             'r3': 3})
+
+def console_output():
+    return 'pc: %2d r1: %3d' % (REGISTER_FILE['pc'], REGISTER_FILE['r1'])
 
 # r0 holds number of iterations
 # r1 holds current iteration index
@@ -22,4 +28,5 @@ PROGRAM = ['blth r3 r2 0',  # 0  Not Taken
            'blth r3 r2 0',  # 8  Not Taken
            'blth r2 r3 2',  # 9      Taken
            'addi r1 r1 1',
-           'blth r1 r0 0']
+           'blth r1 r0 0',
+           'halt']

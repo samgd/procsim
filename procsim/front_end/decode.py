@@ -104,7 +104,8 @@ def _decode(instruction):
                'ldr': lambda args: ins.Load(args[0], args[1]),
                'str': lambda args: ins.Store(args[0], args[1]),
                'j': lambda args: ins.Jump(int(args[0])),
-               'blth': lambda args: ins.Blth(args[0], args[1], int(args[2]))}
+               'blth': lambda args: ins.Blth(args[0], args[1], int(args[2])),
+               'halt': lambda args: ins.Halt()}
     fields = instruction['instruction_str'].split(' ')
     try:
         front_end_ins = gen_ins[fields[0]](fields[1:])

@@ -117,3 +117,11 @@ class TestDecode(unittest.TestCase):
                         unit.tick()
 
                     self.assertTrue(instruction_list_equal(self.feed_log.log, exp_ins))
+
+    def test_halt(self):
+        """Ensure Halt is decoded."""
+        unit = decode.Decode(self.feed_log, capacity=12)
+        unit.feed({'instruction_str': 'halt'})
+        unit.tick()
+        unit.tick()
+        self.assertTrue(instruction_list_equal(self.feed_log.log, [ins.Halt()]))

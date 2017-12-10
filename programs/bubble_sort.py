@@ -3,15 +3,15 @@ import random
 from procsim.register_file import RegisterFile
 from procsim.memory import Memory
 
-LEN_ARRAY = 10
+LEN_ARRAY = 15
 MEMORY = Memory(LEN_ARRAY)
-# Initialize array with random values.
-#for i in range(LEN_ARRAY):
-#    MEMORY[i] = random.randint(0, 1000)
 for i in range(LEN_ARRAY):
     MEMORY[i] = LEN_ARRAY - i
 
 REGISTER_FILE = RegisterFile(6)
+
+def console_output():
+    return 'pc: %d memory: %r' % (REGISTER_FILE['pc'], MEMORY.memory)
 
 # r0 is zero
 # r1 holds len_array - 1
@@ -40,4 +40,5 @@ PROGRAM = ['addi r1 r1 %d' % (LEN_ARRAY - 1),
            'subi r3 r3 1',
            'str r5 r3',
            'addi r3 r3 1',
-           'j 7']
+           'j 7',
+           'halt']

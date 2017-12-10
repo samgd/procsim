@@ -1,8 +1,10 @@
 import random
 import numpy as np
+from copy import deepcopy
 
-from procsim.register_file import RegisterFile
 from procsim.memory import Memory
+from procsim.register_file import RegisterFile
+from procsim.unroll import unroll
 
 LEN_ARRAY = 8634
 MEMORY = Memory(LEN_ARRAY)
@@ -49,6 +51,11 @@ for i in range(784):
     MEMORY[i + 7850] = int(image[i])
 
 REGISTER_FILE = RegisterFile(15) # 15 GPR + 1 PC
+
+def console_output():
+    return 'pc: %2d\tComputing score for class (r1): %1d\tBest class (r3): %1d' % (REGISTER_FILE['pc'],
+                                                                                   REGISTER_FILE['r3'],
+                                                                                   REGISTER_FILE['r1'])
 
 def reference_implementation():
     """Classify an MNIST image."""
@@ -107,4 +114,7 @@ PROGRAM = ['addi r10 r0 784',
            'addi r3 r3 1',
            # Iterate again if not finished.
            'addi r8 r0 10',
-           'blth r3 r8 1']
+           'blth r3 r8 1',
+           'halt']
+
+#PROGRAM = unroll(PROGRAM, deepcopy(REGISTER_FILE), deepcopy(MEMORY))

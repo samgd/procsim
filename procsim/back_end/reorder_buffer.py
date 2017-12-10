@@ -1,11 +1,13 @@
 from copy import copy
 
-from procsim.back_end.instructions.conditional import Conditional
 from procsim.back_end.instructions.branch import Branch
+from procsim.back_end.instructions.conditional import Conditional
+from procsim.back_end.instructions import halt as back_end_halt
 from procsim.back_end.instructions import load as back_end_load
 from procsim.back_end.instructions import store as back_end_store
 from procsim.back_end.instructions.integer_logical import IntegerLogical
 from procsim.back_end.subscriber import Subscriber
+from procsim.end_of_program import EndOfProgram
 from procsim.front_end.instructions import *
 from procsim.pipeline_stage import PipelineStage
 
@@ -24,6 +26,12 @@ class ReorderBuffer(PipelineStage, Subscriber):
         width: Maximum number of instructions to commit per cycle. Note that
             fewer instructions may be committed if the ReorderBuffer has no
             instructions in it's queue. (default 4)
+
+    Attributes:
+        n_committed: Number of instructions committed.
+        n_branch_correct: Number of correctly predicted branch instructions.
+        n_branch_incorrect: Number of incorrectly predicted branch
+            instructions.
     """
 
     REGISTER = 0
@@ -37,6 +45,9 @@ class ReorderBuffer(PipelineStage, Subscriber):
         self.branch_predictor = branch_predictor
         self.flush_root = None
         self.width = width
+        self.n_committed = 0
+        self.n_branch_correct = 0
+        self.n_branch_incorrect = 0
 
         # Circular queue setup.
         if capacity < 1:
@@ -73,7 +84,8 @@ class ReorderBuffer(PipelineStage, Subscriber):
                                     MulI:  self._translate_arith_imm,
                                     Load:  self._translate_memory_access,
                                     Store: self._translate_memory_access,
-                                    Blth:  self._translate_conditional}
+                                    Blth:  self._translate_conditional,
+                                    Halt:  self._translate_halt}
 
         self.operation_lookup = {Add:  lambda o1, o2: o1 + o2,
                                  AddI: lambda o1, o2: o1 + o2,
@@ -91,7 +103,8 @@ class ReorderBuffer(PipelineStage, Subscriber):
                             MulI:  self.REGISTER,
                             Load:  self.MEMORY,
                             Store: self.MEMORY,
-                            Blth:  self.REGISTER}
+                            Blth:  self.REGISTER,
+                            Halt:  None}
 
     def feed(self, front_end_ins):
         """Insert an Instruction into the ReorderBuffer.
@@ -128,6 +141,12 @@ class ReorderBuffer(PipelineStage, Subscriber):
                                      done=False,
                                      spec_exec=self.spec_exec)
             self.spec_exec = True
+        elif isinstance(back_end_ins, back_end_halt.Halt):
+            queue_entry = QueueEntry(dest='',
+                                     value=None,
+                                     typ=back_end_halt.Halt,
+                                     done=True,
+                                     spec_exec=self.spec_exec)
         else:
             queue_entry = QueueEntry(dest=front_end_ins.rd,
                                      value=None,
@@ -141,7 +160,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         typ = self.type_lookup[type(front_end_ins)]
         if typ == self.REGISTER:
             self.reservation_station.feed(back_end_ins)
-        else:
+        elif typ == self.MEMORY:
             self.load_store_queue.feed(back_end_ins)
 
     def full(self, front_end_ins):
@@ -162,7 +181,10 @@ class ReorderBuffer(PipelineStage, Subscriber):
         typ = self.type_lookup[type(front_end_ins)]
         if typ == self.REGISTER:
             return self.reservation_station.full()
-        return self.load_store_queue.full()
+        elif typ == self.MEMORY:
+            return self.load_store_queue.full()
+        else:
+            return False
 
     def operate(self):
         """Commit, in-order, completed instructions."""
@@ -192,10 +214,13 @@ class ReorderBuffer(PipelineStage, Subscriber):
                 self._process_store_entry(head)
             elif head.typ == Conditional:
                 self._process_conditional_queue_entry(head)
+            elif head.typ == back_end_halt.Halt:
+                raise EndOfProgram()
             else:
                 self._process_queue_entry(head)
 
             n_commit += 1
+            self.n_committed += 1
 
         # Establish invariant.
         if self.current_head_id is not None:
@@ -347,6 +372,22 @@ class ReorderBuffer(PipelineStage, Subscriber):
                            operand_1,
                            operand_2)
 
+    def _translate_halt(self, front_end_ins):
+        """Return a backend Instruction formed from a frontend instruction.
+
+        This function will increment the ReorderBuffer's future queue tail
+        pointer.
+
+        Args:
+            front_end_ins: Frontend Halt instruction.
+
+        Returns:
+            Backend Halt Instruction.
+        """
+        queue_id = self._get_queue_id()
+
+        return back_end_halt.Halt(queue_id)
+
     def _get_queue_id(self):
         """Allocate and return a ROB ID.
 
@@ -423,6 +464,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         if ((entry.value.taken and entry.value.actually_taken)
             or (not entry.value.taken and not entry.value.actually_taken)):
             # Correct prediction.
+            self.n_branch_correct += 1
             # All instructions in queue up to next conditional are no longer
             # being speculatively executed - set their flags to False.
             id = (self.current_head_id + 1) % self.CAPACITY
@@ -451,6 +493,7 @@ class ReorderBuffer(PipelineStage, Subscriber):
         else:
             # Incorrect prediction.
             self.flush_root.flush()
+            self.n_branch_incorrect += 1
             if entry.value.taken and not entry.value.actually_taken:
                 self.register_file['pc'] = entry.value.not_taken_addr
             else:

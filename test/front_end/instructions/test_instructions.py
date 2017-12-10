@@ -65,6 +65,11 @@ class TestInstructions(unittest.TestCase):
         self.assertEqual(repr(blth), "Blth('x0', 'x10', 99)")
         self.assertEqual(str(blth), 'blth x0 x10 99')
 
+    def test_halt_display(self):
+        halt = ins.Halt()
+        self.assertEqual(repr(halt), "Halt()")
+        self.assertEqual(str(halt), 'halt')
+
     def test_equality(self):
         ins1 = ins.Add('r1', 'r2', 'r3')
         ins2 = ins.Add('r1', 'r2', 'r3')
