@@ -18,11 +18,12 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         data_forwarding: If True, Stores forward results to later Loads.
     """
 
-    def __init__(self, memory, broadcast_bus, capacity=32, data_forwarding=True):
+    def __init__(self, memory, broadcast_bus, capacity=32, width=4, data_forwarding=True):
         super().__init__()
         if capacity < 1:
             raise ValueError('capacity must be >= 1')
         self.CAPACITY = capacity
+        self.width = width
         self.memory = memory
         self.broadcast_bus = broadcast_bus
         self.spec_exec = {}
@@ -60,24 +61,43 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         return len(self.future_queue) == self.CAPACITY
 
     def operate(self):
-        if len(self.current_queue) == 0:
-            return
-        head = self.current_queue[0]
-        if self.spec_exec[head.uid]:
-            return
-        if not head.can_dispatch():
-            return
-        head.DELAY = max(0, head.DELAY - 1)
-        if head.DELAY > 0 and not hasattr(head, 'forwarded'):
-            return
-        result = head.execute(self.memory)
-        if result:
-            self.broadcast_bus.publish(result)
-        del self.spec_exec[head.uid]
-        del self.current_queue[0]
-        del self.future_queue[0]
-        if self.data_forwarding:
-            self._data_forward(head)
+        n_op = 0
+        next_idx = 0
+        unk_addr = set()
+
+        while len(self.current_queue) > next_idx and n_op < self.width:
+            n_op += 1
+
+            entry = self.current_queue[next_idx]
+            if self.spec_exec[entry.uid] or not entry.can_dispatch():
+                if isinstance(entry, Store):
+                    # Store with unknown address blocks rest.
+                    if entry.address is None:
+                        return
+                    # Store with known address but not value permits later
+                    # loads and stores to operate provided they have different
+                    # addresses.
+                    unk_addr.add(entry.address)
+                next_idx += 1
+                continue
+
+            if entry.address in unk_addr:
+                next_idx += 1
+                continue
+
+            entry.DELAY = max(0, entry.DELAY - 1)
+            if entry.DELAY > 0 and not hasattr(entry, 'forwarded'):
+                next_idx += 1
+                continue
+
+            result = entry.execute(self.memory)
+            if result:
+                self.broadcast_bus.publish(result)
+            del self.spec_exec[entry.uid]
+            del self.current_queue[next_idx]
+            del self.future_queue[next_idx]
+            if self.data_forwarding:
+                self._data_forward(entry)
 
     def _data_forward(self, ins):
         """Forward Store value to Load instructions."""

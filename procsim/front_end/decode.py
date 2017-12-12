@@ -18,7 +18,7 @@ class Decode(PipelineStage):
             (default 1)
     """
 
-    def __init__(self, reorder_buffer, capacity=4, width=4):
+    def __init__(self, reorder_buffer, capacity=32, width=4):
         super().__init__()
         if capacity < 1:
             raise ValueError('capacity must be >= 1')

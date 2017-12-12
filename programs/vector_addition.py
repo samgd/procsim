@@ -8,6 +8,10 @@ for array_idx in range(2):
     for elem_idx in range(LEN_ARRAY):
         mem_idx = array_idx * LEN_ARRAY + elem_idx
         MEMORY[mem_idx] = elem_idx
+# Zero output arrray
+for out_idx in range(LEN_ARRAY):
+    mem_idx = 2 * LEN_ARRAY + out_idx
+    MEMORY[mem_idx] = 0
 
 REGISTER_FILE = RegisterFile(6)
 

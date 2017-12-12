@@ -45,6 +45,7 @@ reservation_station = ReservationStation(capacity=args.capacity,
 load_store_queue = LoadStoreQueue(memory,
                                   broadcast_bus,
                                   capacity=args.capacity,
+                                  width=args.superscalar_width,
                                   data_forwarding=True)
 
 if args.always_taken:
@@ -95,12 +96,24 @@ reorder_buffer.set_pipeline_flush_root(fetch)
 if args.plot:
     cycles = []
     ins_per_cycle = []
+    bpr = []
     plt.ion()
-    graph = plt.plot(cycles, ins_per_cycle)[0]
-    plt.ylim(0, args.superscalar_width)
-    plt.xlabel('Cycles')
-    plt.ylabel('Instructions/Cycle')
-    plt.title('Average Instruction Throughput')
+
+    ax1 = plt.subplot(211)
+    ax1.set_ylim(0, args.superscalar_width)
+    ax1.set_ylabel('Instructions/Cycle')
+    ax1.set_xlim(0, 1)
+    ax1.set_xlabel('Cycle')
+    ax1.set_title('Average Instruction Throughput')
+    graph1 = ax1.plot(cycles, ins_per_cycle)[0]
+
+    ax2 = plt.subplot(212)
+    ax2.set_ylim(0, 1.0)
+    ax2.set_ylabel('Branch Prediction Accuracy')
+    ax2.set_xlim(0, 1)
+    ax2.set_xlabel('Cycle')
+    ax2.set_title('Average Branch Prediction Accuracy')
+    graph2 = ax2.plot(cycles, bpr)[0]
 
 try:
     while True:
@@ -115,13 +128,19 @@ try:
         if args.plot:
             cycles.append(clock.n_ticks)
             ins_per_cycle.append(reorder_buffer.n_committed / max(1, clock.n_ticks))
-            graph.set_xdata(cycles)
-            graph.set_ydata(ins_per_cycle)
-            plt.xlim(0, clock.n_ticks)
+            bpr.append(max(1, reorder_buffer.n_branch_correct) / max(1, (reorder_buffer.n_branch_correct + reorder_buffer.n_branch_incorrect)))
+
+            ax1.set_xlim(0, clock.n_ticks + 2)
+            graph1.set_data(cycles, ins_per_cycle)
+
+            ax2.set_xlim(0, clock.n_ticks + 2)
+            graph2.set_data(cycles, bpr)
+
             plt.draw()
             plt.pause(0.01)
 
         clock.tick()
+
 except EndOfProgram:
     print('end:\t' + program.console_output())
     rob = reorder_buffer

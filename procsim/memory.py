@@ -38,5 +38,5 @@ class Memory:
         if isinstance(address, Register):
             address = address.read()
         if not 0 <= address < len(self.memory):
-            raise IndexError('memory address out of range')
+            raise IndexError('memory address %r out of range' % address)
         return address

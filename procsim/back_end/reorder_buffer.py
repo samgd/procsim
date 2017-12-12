@@ -475,7 +475,8 @@ class ReorderBuffer(PipelineStage, Subscriber):
             # entries. Set to False unless another conditional instruction is
             # in queue.
             self.spec_exec = False
-            while id != self.current_head_id and id != self.current_tail_id:
+
+            while id != self.current_head_id and id != self.future_tail_id:
                 entry = self.future_queue[self.ID_PREFIX + str(id)]
                 entry.spec_exec = False
                 if entry.typ == back_end_store.Store or entry.typ == back_end_load.Load:
