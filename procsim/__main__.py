@@ -34,7 +34,8 @@ memory = program.MEMORY
 
 broadcast_bus = BroadcastBus()
 
-branch_unit = BranchUnit(broadcast_bus)
+branch_units = [BranchUnit(broadcast_bus)
+                for _ in range(args.n_branch_units)]
 
 integer_units = [IntegerUnit(broadcast_bus)
                  for _ in range(args.n_integer_units)]
@@ -46,7 +47,8 @@ load_store_queue = LoadStoreQueue(memory,
                                   broadcast_bus,
                                   capacity=args.capacity,
                                   width=args.superscalar_width,
-                                  data_forwarding=True)
+                                  data_forwarding=args.no_forwarding,
+                                  bypassing=args.no_bypassing)
 
 if args.always_taken:
     branch_predictor = AlwaysTaken()
@@ -54,6 +56,9 @@ elif args.never_taken:
     branch_predictor = NeverTaken()
 elif args.back_taken_forward_not:
     branch_predictor = BackTakenForwardNot()
+elif args.branch_history_table:
+    branch_predictor = BranchHistoryTable(n_entries=args.branch_history_table[0],
+                                          n_prediction_bits=args.branch_history_table[1])
 else:
     branch_predictor = BranchHistoryTable(n_entries=2**8, n_prediction_bits=2)
 
@@ -67,6 +72,7 @@ reorder_buffer = ReorderBuffer(register_file,
 decode = Decode(reorder_buffer,
                 capacity=args.capacity,
                 width=args.superscalar_width)
+
 fetch = Fetch(register_file,
               program.PROGRAM,
               decode,
@@ -78,11 +84,13 @@ broadcast_bus.subscribe(reservation_station)
 broadcast_bus.subscribe(load_store_queue)
 broadcast_bus.subscribe(reorder_buffer)
 
-reservation_station.register(branch_unit)
+for branch_unit in branch_units:
+    reservation_station.register(branch_unit)
 for integer_unit in integer_units:
     reservation_station.register(integer_unit)
 
-clock.register(branch_unit)
+for branch_unit in branch_units:
+    clock.register(branch_unit)
 for integer_unit in integer_units:
     clock.register(integer_unit)
 clock.register(reservation_station)
@@ -120,8 +128,10 @@ try:
         out = str(clock.n_ticks) + ':\t' + program.console_output()
 
         if args.step_execution:
+            if args.console_output:
+                out = ''
             input(out)
-        else:
+        elif args.console_output:
             print(out)
 
         # Update graph.
@@ -142,7 +152,8 @@ try:
         clock.tick()
 
 except EndOfProgram:
-    print('end:\t' + program.console_output())
+    if args.console_output:
+        print('end:\t' + program.console_output())
     rob = reorder_buffer
     print('Instructions Issued: %d' % rob.n_issued)
     print('Instructions Committed: %d' % rob.n_committed)
@@ -150,4 +161,4 @@ except EndOfProgram:
     print('Instructions/Cycle: %.2f' % (rob.n_committed / clock.n_ticks))
     accuracy = max(1, rob.n_branch_correct) / max(1, (rob.n_branch_correct + rob.n_branch_incorrect))
     print('Branch Prediction Accuracy: %.2f' % accuracy)
-    input('Exit?')
+    #input('Exit?')

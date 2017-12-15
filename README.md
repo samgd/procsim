@@ -14,7 +14,7 @@ and then press enter to step through each clock cycle.
 
 ## Instructions
 
-| Operation            | Assembler       | Action                       | Execution Cycles |
+| Operation            | Assembly        | Action                       | Execution Cycles |
 |:--------------------:| --------------- | ---------------------------- |:----------------:|
 | Add register         | add  rd r1 r2   | rd := r1 + r2                | 2                |
 | Add immediate        | addi rd r1 imm  | rd := r1 + imm               | 2                |

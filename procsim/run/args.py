@@ -31,6 +31,12 @@ def get_args():
                         type=int,
                         dest='n_integer_units')
 
+    parser.add_argument('--n-branch-units',
+                        action='store',
+                        default=1,
+                        type=int,
+                        dest='n_branch_units')
+
     parser.add_argument('--superscalar-width',
                         action='store',
                         default=4,
@@ -43,6 +49,14 @@ def get_args():
                         type=int,
                         dest='capacity')
 
+    parser.add_argument('--no-bypassing',
+                        action='store_false',
+                        dest='no_bypassing')
+
+    parser.add_argument('--no-forwarding',
+                        action='store_false',
+                        dest='no_forwarding')
+
     parser.add_argument('--step-execution',
                         action='store_true',
                         dest='step_execution')
@@ -50,5 +64,9 @@ def get_args():
     parser.add_argument('--plot',
                         action='store_true',
                         dest='plot')
+
+    parser.add_argument('--no-console-output',
+                        action='store_false',
+                        dest='console_output')
 
     return parser.parse_args()

@@ -18,7 +18,7 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         data_forwarding: If True, Stores forward results to later Loads.
     """
 
-    def __init__(self, memory, broadcast_bus, capacity=32, width=4, data_forwarding=True):
+    def __init__(self, memory, broadcast_bus, capacity=32, width=4, data_forwarding=True, bypassing=True):
         super().__init__()
         if capacity < 1:
             raise ValueError('capacity must be >= 1')
@@ -30,6 +30,7 @@ class LoadStoreQueue(PipelineStage, Subscriber):
         self.current_queue = []
         self.future_queue = []
         self.data_forwarding = data_forwarding
+        self.bypassing = bypassing
 
     def feed(self, instruction):
         """Insert a MemoryAccess Instruction into the LoadStoreQueue.
@@ -98,6 +99,10 @@ class LoadStoreQueue(PipelineStage, Subscriber):
             del self.future_queue[next_idx]
             if self.data_forwarding:
                 self._data_forward(entry)
+
+            # Bypassing disabled and entry was a store.
+            if not self.bypassing and isinstance(entry, Store):
+                return
 
     def _data_forward(self, ins):
         """Forward Store value to Load instructions."""
