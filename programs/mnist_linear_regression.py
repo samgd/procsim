@@ -7,7 +7,6 @@ import scipy.ndimage as ndimage
 
 from procsim.memory import Memory
 from procsim.register_file import RegisterFile
-from procsim.unroll import unroll
 from programs.mnist_input import MnistInput
 
 LEN_ARRAY = 8634
